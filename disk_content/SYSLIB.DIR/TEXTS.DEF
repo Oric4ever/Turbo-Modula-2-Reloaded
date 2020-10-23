@@ -1,0 +1,51 @@
+DEFINITION MODULE Texts;
+ FROM Files IMPORT FILE;
+ TYPE TEXT = [1..16];
+
+ VAR input,output,console: TEXT;
+
+ PROCEDURE ReadChar    (t: TEXT;   VAR ch: CHAR);
+ PROCEDURE ReadString  (t: TEXT;   VAR s : ARRAY OF CHAR);
+ PROCEDURE ReadInt     (t: TEXT;   VAR i : INTEGER);
+ PROCEDURE ReadCard    (t: TEXT;   VAR c : CARDINAL);
+ PROCEDURE ReadLong    (t: TEXT;   VAR l : LONGINT);
+ PROCEDURE ReadReal    (t: TEXT;   VAR r : REAL);
+ PROCEDURE ReadLn      (t: TEXT);
+
+ PROCEDURE WriteChar   (t: TEXT;       ch: CHAR);
+ PROCEDURE WriteString (t: TEXT;       s : ARRAY OF CHAR);
+ PROCEDURE WriteInt    (t: TEXT;       i : INTEGER;  n: CARDINAL);
+ PROCEDURE WriteCard   (t: TEXT;       c,n:CARDINAL);
+ PROCEDURE WriteLong   (t: TEXT;       l : LONGINT;  n: CARDINAL);
+ PROCEDURE WriteReal   (t: TEXT;       r : REAL;     n: CARDINAL;
+                                                digits: INTEGER);
+ PROCEDURE WriteLn     (t: TEXT);
+
+ PROCEDURE ReadLine    (t: TEXT;   VAR s : ARRAY OF CHAR);
+ PROCEDURE ReadAgain   (t: TEXT);
+
+ PROCEDURE Done        (t: TEXT):  BOOLEAN;
+ PROCEDURE EOLN        (t: TEXT):  BOOLEAN;
+ PROCEDURE EOT         (t: TEXT):  BOOLEAN;
+ PROCEDURE Col         (t: TEXT):  CARDINAL;
+ PROCEDURE SetCol      (t: TEXT;   column: CARDINAL);
+ PROCEDURE TextFile    (t: TEXT):  FILE;
+
+ PROCEDURE OpenText    (VAR t: TEXT; name: ARRAY OF CHAR): BOOLEAN;
+ PROCEDURE CreateText  (VAR t: TEXT; name: ARRAY OF CHAR): BOOLEAN;
+ PROCEDURE CloseText   (VAR t: TEXT);
+
+ CONST EOL = 36C;
+
+ TYPE TextDriver = PROCEDURE(TEXT, VAR CHAR);
+
+ PROCEDURE ConnectDriver(VAR t: TEXT; p: TextDriver);
+
+ PROCEDURE Init;  (* used only by system *)
+
+ VAR haltOnControlC : BOOLEAN;  (* TRUE by default *)
+
+ EXCEPTION TextNotOpen, TooManyTexts;
+
+END Texts.
+

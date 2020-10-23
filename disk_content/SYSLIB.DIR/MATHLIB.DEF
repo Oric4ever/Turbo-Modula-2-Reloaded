@@ -1,0 +1,18 @@
+DEFINITION MODULE MathLib;
+
+ PROCEDURE Sqrt     (x: REAL): REAL;
+ PROCEDURE Exp      (x: REAL): REAL;
+ PROCEDURE Ln       (x: REAL): REAL;
+ PROCEDURE Sin      (x: REAL): REAL;
+ PROCEDURE Cos      (x: REAL): REAL;
+ PROCEDURE Arctan   (x: REAL): REAL;
+ PROCEDURE Entier   (x: REAL): INTEGER;
+
+ PROCEDURE Randomize(n: CARDINAL);
+ PROCEDURE Random  ( ): REAL;
+
+EXCEPTION ArgumentError;
+ (* Is raised if an argument is outside its legal range *)
+
+END MathLib.
+

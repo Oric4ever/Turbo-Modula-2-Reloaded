@@ -1,0 +1,15 @@
+DEFINITION MODULE ComLine;
+FROM Texts IMPORT TEXT;
+
+VAR commandLine    : TEXT;
+    inName,outName : ARRAY [0..19] OF CHAR;
+    progName       : ARRAY [0..7] OF CHAR;
+    execute        : CARDINAL;
+    codepos        : CARDINAL;
+
+PROCEDURE RedirectInput;
+PROCEDURE RedirectOutput;
+PROCEDURE PromptFor(prompt: ARRAY OF CHAR; VAR s: ARRAY OF CHAR);
+
+END ComLine.
+

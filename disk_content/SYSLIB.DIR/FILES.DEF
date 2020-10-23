@@ -1,0 +1,40 @@
+DEFINITION MODULE Files;
+ FROM SYSTEM IMPORT BYTE, WORD, ADDRESS;
+ TYPE FILE;
+
+ PROCEDURE Open        (VAR f: FILE; name: ARRAY OF CHAR): BOOLEAN;
+ PROCEDURE Create      (VAR f: FILE; name: ARRAY OF CHAR);
+ PROCEDURE Close       (VAR f: FILE);
+ PROCEDURE Delete      (VAR f: FILE);
+ PROCEDURE Rename      (VAR f: FILE; name: ARRAY OF CHAR);
+
+ PROCEDURE GetName     (f: FILE; VAR name: ARRAY OF CHAR);
+
+ PROCEDURE FileSize    (f: FILE): LONGINT;
+ PROCEDURE EOF         (f: FILE): BOOLEAN;
+
+ PROCEDURE ReadByte    (f: FILE; VAR ch: BYTE);
+ PROCEDURE ReadWord    (f: FILE; VAR w : WORD);
+ PROCEDURE ReadRec     (f: FILE; VAR rec: ARRAY OF WORD);
+ PROCEDURE ReadBytes   (f: FILE; buf: ADDRESS; nbytes: CARDINAL): CARDINAL;
+
+ PROCEDURE WriteByte   (f: FILE; ch: BYTE);
+ PROCEDURE WriteWord   (f: FILE;  w: WORD);
+ PROCEDURE WriteRec    (f: FILE; VAR rec: ARRAY OF WORD);
+ PROCEDURE WriteBytes  (f: FILE; buf: ADDRESS; nbytes: CARDINAL);
+
+ PROCEDURE Flush       (f: FILE);
+ (* Flushes the file's internal buffer to disk. Is used to detect
+    DiskFulls at once *)
+
+ PROCEDURE NextPos     (f: FILE): LONGINT;
+ PROCEDURE SetPos      (f: FILE; pos: LONGINT);
+
+ PROCEDURE NoTrailer   (f: FILE);
+
+ PROCEDURE ResetSys    ( );
+
+ EXCEPTION EndError, StatusError, UseError, DeviceError, DiskFull;
+
+END Files.
+

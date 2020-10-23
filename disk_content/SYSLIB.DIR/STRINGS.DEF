@@ -1,0 +1,17 @@
+DEFINITION MODULE Strings;
+ TYPE String = ARRAY [0..80] OF CHAR;
+
+ PROCEDURE Length (VAR str: ARRAY OF CHAR): CARDINAL;
+ PROCEDURE Pos    (substr,str: ARRAY OF CHAR): CARDINAL;
+ PROCEDURE Insert (substr : ARRAY OF CHAR; VAR str: ARRAY OF CHAR;
+                      inx : CARDINAL);
+ PROCEDURE Delete (VAR str: ARRAY OF CHAR; inx,len: CARDINAL);
+ PROCEDURE Append (substr : ARRAY OF CHAR; VAR str: ARRAY OF CHAR);
+ PROCEDURE Copy   (VAR str: ARRAY OF CHAR; inx,len: CARDINAL;
+                   VAR result: ARRAY OF CHAR);
+ PROCEDURE CAPS   (VAR str: ARRAY OF CHAR);
+
+ EXCEPTION StringError;
+
+END Strings.
+

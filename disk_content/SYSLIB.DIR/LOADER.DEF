@@ -1,0 +1,16 @@
+DEFINITION MODULE Loader;
+FROM SYSTEM   IMPORT ADDRESS;
+FROM Files    IMPORT FILE;
+FROM FATDIR   IMPORT Extension;
+
+(*  1 *) PROCEDURE InitLibs  ();
+(*  2 *) PROCEDURE LibOpen   (f: FILE; fname: ARRAY OF CHAR; symfile: BOOLEAN)  : BOOLEAN;
+(*  3 *) PROCEDURE FileSearch(f: FILE; fname: ARRAY OF CHAR;     ext: Extension): BOOLEAN;
+(*  4 *) PROCEDURE LibRead   (f: FILE; addr : ADDRESS;        nbytes: CARDINAL) : BOOLEAN;
+(*  5 *) PROCEDURE NLibs     (): CARDINAL;
+(*  6 *) PROCEDURE Call      (modName: ARRAY OF CHAR);
+
+EXCEPTION LoadError;
+
+END Loader.
+

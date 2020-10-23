@@ -1,0 +1,13 @@
+DEFINITION MODULE Processes;
+TYPE SIGNAL;
+
+ PROCEDURE StartProcess(P: PROC; n: CARDINAL);
+ PROCEDURE SEND        (VAR s: SIGNAL);
+ PROCEDURE WAIT        (VAR s: SIGNAL);
+ PROCEDURE Awaited     (s: SIGNAL): BOOLEAN;
+ PROCEDURE Init        (VAR s: SIGNAL);
+ 
+EXCEPTION DeadLock;
+
+END Processes.
+

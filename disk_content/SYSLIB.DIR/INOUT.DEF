@@ -1,0 +1,45 @@
+DEFINITION MODULE InOut;
+ CONST EOL=36C;
+ VAR Done: BOOLEAN;
+   termCH: CHAR;
+
+ PROCEDURE OpenInput (defext: ARRAY OF CHAR);
+ (* Requests a file name at the terminal and connects input with that
+    file. The file name may indicate one of the logical devices of
+    CP/M. If the file name does not contain an extension itself, the
+    default extension defext is appended.
+ *)
+
+ PROCEDURE OpenOutput (defext: ARRAY OF CHAR);
+ (* Same as above but for output *)
+
+ PROCEDURE CloseInput;
+ (* Closes input file, returns input to terminal. *)
+
+ PROCEDURE CloseOutput;
+ (* Closes output file, returns output to terminal. *)
+
+ PROCEDURE Read (VAR ch: CHAR);
+ (* Done := Not past end of input *)
+
+ PROCEDURE ReadString (VAR s: ARRAY OF CHAR);
+ (* Reads string as in Texts. Done := the returned string is not empty *)
+
+ PROCEDURE ReadInt (VAR x: INTEGER);
+ (* Reads integer as in Texts. Done := integer was read *)
+
+ PROCEDURE ReadCard (VAR x: CARDINAL);
+ (* Done := cardinal was read *)
+
+ PROCEDURE Write(ch: CHAR);
+ PROCEDURE WriteLn;
+ PROCEDURE WriteString(s: ARRAY OF CHAR);
+ PROCEDURE WriteInt(x: INTEGER; n: CARDINAL);
+ PROCEDURE WriteCard(x,n: CARDINAL);
+ PROCEDURE WriteHex(x,n: CARDINAL);
+ PROCEDURE WriteOct(x,n: CARDINAL);
+
+ PROCEDURE ReadReal (VAR x: REAL);
+ PROCEDURE WriteReal(x: REAL; n,digits: CARDINAL);
+END InOut.
+
