@@ -1,0 +1,279 @@
+IMPLEMENTATION MODULE FATDIR;
+FROM SYSTEM IMPORT BIOS,ADR,WORD,BYTE,IORESULT,FILL;
+IMPORT Disk;
+FROM NEWFAT32 IMPORT ReadFS, WriteFS, bufferFS, ClusterToLBA, NextSector, firstRootCluster,
+                     WriteFragment, FindFreeCluster, PutFATentry, DeleteChain;
+
+(*
+TYPE
+    BaseName = ARRAY [0..7] OF CHAR;
+    Extension= ARRAY [0..2] OF CHAR;
+    FullName = ARRAY [0..7+3] OF CHAR;
+    FileName = RECORD
+                 CASE : CARDINAL OF
+                 | 1 : baseName: BaseName; extension: Extension;
+                 | 2 : fullName: FullName;
+                 END;
+               END;
+    DirEntryDesc = RECORD
+                     CASE : CARDINAL OF
+                     | 1 : filename : FileName;
+                     | 2 : bytes    : ARRAY [0..11] OF BYTES;
+                        (* index 11 has file attributes *)
+                     END;
+                    (* offset 12 *) reserved     : CARDINAL;
+                    (* offset 14 *) creationTime : CARDINAL;
+                    (* offset 16 *) creationDate : CARDINAL;
+                    (* offset 18 *) accessDate   : CARDINAL;
+                    (* offset 20 *) highCluster  : CARDINAL;
+                    (* offset 22 *) writeTime    : CARDINAL;
+                    (* offset 24 *) writeDate    : CARDINAL;
+                    (* offset 26 *) startCluster : CARDINAL;
+                    (* offset 28 *) fileSize     : LONGINT;
+                   END;
+    DirEntryPtr = POINTER TO DirEntryDesc;
+    FSentry = RECORD
+                ptr : DirEntryPtr;
+                dirSector : LBA;
+               END;
+
+*)
+
+CONST DELETED = 345C; (* 0E5H value for deleted entries *)
+(* File attributes bits *)
+CONST READONLY = 0; HIDDEN = 1; SYSFILE = 2; VOLNAME = 3; DIRECTORY = 4; ARCHIVE = 5;
+
+TYPE DirSector = ARRAY [0..15] OF DirEntryDesc;
+TYPE LongSplit = RECORD
+                   CASE : CARDINAL OF
+                   | 1  : low, high: CARDINAL;
+                   | 2  : long : LONGINT;
+                   END;
+                 END;
+
+VAR currentDir       : Directory;
+    savedDir         : Directory;
+    buffer           : POINTER TO DirSector;
+    findNextCluster  : Cluster;
+    findNextSector   : LongSplit;
+    findNextIndex    : INTEGER;
+    findName         : EntryNameAndType;
+
+PROCEDURE Build83Name(name: ARRAY OF CHAR; ext: Extension; forceExt: BOOLEAN;
+                      VAR entryName: EntryNameAndType);
+  PROCEDURE extendWildcard(VAR s: ARRAY OF CHAR;
+                               i: CARDINAL;
+                           VAR result: ARRAY OF CHAR): CARDINAL;
+  VAR j: CARDINAL;
+  BEGIN
+    j := 0;
+    WHILE (i <= HIGH(s))
+      AND (j <= HIGH(result))
+      AND (s[i] # 0C)
+      AND (s[i] # '.')
+    DO
+      IF s[i] = '*' THEN
+        REPEAT result[j] := '?'; INC(j) UNTIL j > HIGH(result)
+      ELSE
+        result[j] := CAP(s[i]); INC(j)
+      END;
+      INC(i)
+    END;
+    WHILE j <= HIGH(result) DO result[j] := ' '; INC(j) END;
+    RETURN i
+  END extendWildcard;
+VAR i: CARDINAL;
+BEGIN
+  i := extendWildcard(name, 0, entryName.baseName);
+  IF (i <= HIGH(name)) AND (name[i] = '.') THEN
+    i := extendWildcard(name, i+1, entryName.extension)
+  END;
+  IF forceExt THEN entryName.extension := ext END;
+END Build83Name;
+
+(*********************************************************************)
+(* Searching Directory entries                                       *)
+
+PROCEDURE InitFind(filename: FullName);
+BEGIN
+  findName.fullName   := filename;
+  findNextCluster     := currentDir;
+  findNextSector.long := LONG(0);
+  findNextIndex       := -1;
+END InitFind;
+
+PROCEDURE WildCardCompare(VAR filename: FullName): BOOLEAN;
+VAR i: CARDINAL;
+BEGIN
+  FOR i:=0 TO HIGH(findName.fullName) DO
+    IF  (findName.fullName[i] <> '?')
+    AND (findName.fullName[i] <> filename[i]) THEN
+      RETURN FALSE
+    END
+  END;
+  RETURN TRUE
+END WildCardCompare;
+
+PROCEDURE FindNextMatch(VAR entry: Entry): BOOLEAN;
+VAR nameInitial: CHAR;
+    ptr : POINTER TO DirEntryDesc;
+BEGIN
+  INC(findNextIndex);
+  REPEAT
+    ReadFS(ClusterToLBA(findNextCluster) + findNextSector.long);
+    WHILE findNextIndex < 16 DO (* 16 directory entries per sector *)
+      ptr := ADR(buffer^[findNextIndex]);
+      nameInitial := ptr^.nameAndType.bytes[0];
+      IF  nameInitial = 0C THEN RETURN FALSE END; (* end of dir *)
+      IF (nameInitial <> DELETED) AND WildCardCompare(ptr^.nameAndType.fullName) THEN
+        entry.directory := findNextCluster;
+        entry.index     := findNextSector.low * 16 + CARDINAL(findNextIndex);
+        entry.desc      := ptr^;
+        RETURN TRUE
+      END;
+      INC(findNextIndex);
+    END;
+    findNextIndex  := 0;
+  UNTIL NOT NextSector(findNextCluster, findNextSector.long, FALSE);
+  RETURN FALSE (* end of full dir *)
+END FindNextMatch;
+
+PROCEDURE StartCluster(VAR entry: Entry): Cluster;
+VAR startCluster : LongSplit;
+BEGIN
+  startCluster.low  := entry.desc.startCluster;
+  startCluster.high := entry.desc.highCluster;
+  RETURN startCluster.long
+END StartCluster;
+
+PROCEDURE SetStartCluster(VAR entry: Entry; cluster: Cluster);
+VAR startCluster : LongSplit;
+BEGIN
+  startCluster.long := cluster;
+  entry.desc.startCluster := startCluster.low;
+  entry.desc.highCluster  := startCluster.high;
+END SetStartCluster;
+
+PROCEDURE EnterDir(dirname: ARRAY OF CHAR): BOOLEAN;
+VAR index: CARDINAL;
+    entry: Entry;
+BEGIN
+  IF dirname = ".." 
+  THEN entry.desc.nameAndType.fullName := "..         "
+  ELSE Build83Name(dirname,"DIR",TRUE,entry.desc.nameAndType)
+  END;
+  InitFind(entry.desc.nameAndType);
+  IF FindNextMatch(entry) THEN
+    IF DIRECTORY IN BITSET(entry.desc.nameAndType.bytes[11]) THEN
+      SetCurrentDir(StartCluster(entry));
+      RETURN TRUE
+    END;
+  END;
+  RETURN FALSE
+END EnterDir;
+
+PROCEDURE EnterRootDir;
+BEGIN
+  currentDir := firstRootCluster;
+END EnterRootDir;
+
+PROCEDURE CurrentDir(): Directory;
+BEGIN
+  RETURN currentDir
+END CurrentDir;
+
+PROCEDURE SetCurrentDir(dir: Directory);
+BEGIN
+  IF dir = LONG(0) THEN EnterRootDir ELSE currentDir := dir END;
+END SetCurrentDir;
+
+PROCEDURE SaveCurrentDir;
+BEGIN
+  savedDir := currentDir;
+END SaveCurrentDir;
+
+PROCEDURE BackToSavedDir;
+BEGIN
+  currentDir := savedDir;
+END BackToSavedDir;
+
+PROCEDURE CreateEntry(filename: EntryNameAndType; VAR entry: Entry): BOOLEAN;
+VAR dirCluster, nextCluster, startCluster: Cluster;
+    dirSector : LongSplit;
+    indx : CARDINAL;
+    initial: CHAR;
+    ptr : POINTER TO DirEntryDesc;
+BEGIN
+  (* Check if it already exists *)
+  InitFind(filename.fullName); IF FindNextMatch(entry) THEN RETURN FALSE END;
+
+  (* this version first allocates a cluster for the new file *)
+  startCluster := FindFreeCluster();
+
+  (* search an empty entry in the directory *)
+  dirCluster     := currentDir;
+  dirSector.long := LONG(0);
+  LOOP
+    ReadFS(ClusterToLBA(dirCluster) + dirSector.long);
+    FOR indx:=0 TO 15 DO
+      ptr     := ADR(buffer^[indx]);
+      initial := ptr^.nameAndType.bytes[0];
+      IF (initial = 0C) OR (initial = CHR(0E5H)) THEN
+        entry.directory := dirCluster;
+        entry.index     := dirSector.low * 16 + indx;
+        FILL(ADR(entry.desc), 32, 0);
+        entry.desc.nameAndType  := filename;
+        SetStartCluster(entry, startCluster);
+        (* TODO: handle time and dates *)
+        ptr^ := entry.desc;
+        WriteFS;
+        RETURN TRUE;
+      END
+    END;
+
+    IF NOT NextSector(dirCluster, dirSector.long, FALSE) THEN
+      nextCluster := FindFreeCluster();
+      PutFATentry(dirCluster, nextCluster);
+      WriteFS;
+      dirCluster := nextCluster; dirSector.low := 0;
+      (* clear sectors of the new cluster *)
+      FILL(buffer, 512, 0);
+      REPEAT
+        WriteFragment(nextCluster, dirSector.low, buffer);
+      UNTIL NOT NextSector(dirCluster, dirSector.long, FALSE);
+      (* return to the first sector of the new cluster *)
+      dirSector.low := 0;
+    END;
+  END;
+END CreateEntry;
+
+(*
+(* Return the cluster of a file sector, following the chain of clusters *)
+PROCEDURE ReadClusterSector(sectorNum: LONGINT; cluster: Cluster; buf: ADDRESS);
+BEGIN
+  ReadSector(ClusterToLBA(cluster) + sectorNum MOD LONG(sectorsPerCluster), buf);
+END ReadEntrySector;
+*)
+
+PROCEDURE UpdateEntry(VAR entry: Entry);
+BEGIN
+  ReadFS(ClusterToLBA(entry.directory) + LONG(entry.index DIV 16));
+  buffer^[entry.index MOD 16] := entry.desc;
+  WriteFS;
+END UpdateEntry;
+
+PROCEDURE DeleteEntry(VAR entry: Entry);
+VAR cluster, next: Cluster;
+BEGIN
+  ReadFS(ClusterToLBA(entry.directory) + LONG(entry.index DIV 16));
+  buffer^[entry.index MOD 16].nameAndType.bytes[0] := DELETED;
+  cluster := StartCluster(entry);
+  WriteFS;
+  DeleteChain(cluster);
+END DeleteEntry;
+
+BEGIN
+  buffer := bufferFS; (* for directory operations, use FAT32's buffer *)
+  EnterRootDir
+END FATDIR.
+

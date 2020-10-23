@@ -1,0 +1,13 @@
+DEFINITION MODULE DISK;
+FROM SYSTEM IMPORT ADDRESS;
+
+TYPE LBA = LONGINT;
+
+(* "User" sector routines *)
+PROCEDURE ReadSector (sector: LBA; buf: ADDRESS);
+PROCEDURE WriteSector(sector: LBA; buf: ADDRESS);
+
+EXCEPTION DiskError;
+
+END DISK.
+

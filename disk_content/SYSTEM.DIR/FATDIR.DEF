@@ -1,0 +1,72 @@
+DEFINITION MODULE FATDIR;
+(*
+  Minimal FAT32 filesystem handling:
+    - 8.3 filenames
+
+  F.Frances 2020
+*)
+FROM NEWFAT32 IMPORT Cluster;
+TYPE
+    Directory= Cluster;
+    BaseName = ARRAY [0..7] OF CHAR;
+    Extension= ARRAY [0..2] OF CHAR;
+    FullName = ARRAY [0..7+3] OF CHAR;
+    EntryNameAndType = RECORD
+                         CASE : CARDINAL OF
+                         | 1 : baseName: BaseName; extension: Extension;
+                         | 2 : fullName: FullName;
+                         | 3 : bytes   : ARRAY [0..11] OF CHAR;
+                                         (* index 11 has file attributes *)
+                         END;
+                       END;
+    DirEntryDesc = RECORD
+                    (* offset  0 *) nameAndType  : EntryNameAndType;
+                    (* offset 12 *) reserved     : CARDINAL;
+                    (* offset 14 *) creationTime : CARDINAL;
+                    (* offset 16 *) creationDate : CARDINAL;
+                    (* offset 18 *) accessDate   : CARDINAL;
+                    (* offset 20 *) highCluster  : CARDINAL;
+                    (* offset 22 *) writeTime    : CARDINAL;
+                    (* offset 24 *) writeDate    : CARDINAL;
+                    (* offset 26 *) startCluster : CARDINAL;
+                    (* offset 28 *) fileSize     : LONGINT;
+                   END;
+    Entry = RECORD
+              desc     : DirEntryDesc; (* copy of descriptor *)
+              directory: Directory;    (* first cluster of directory *)
+              index    : CARDINAL;     (* index of entry in directory *)
+            END;
+
+(* Create a 8.3 filename, extending '*' wildcards *)
+PROCEDURE Build83Name(name: ARRAY OF CHAR; ext: Extension; forceExt: BOOLEAN;
+                      VAR entryName: EntryNameAndType);
+
+(* Initializes a file search in current directory: filename may contain '?' and '*' wildcards *)
+PROCEDURE InitFind       (filename: FullName);
+
+(* Returns the next find match in current directory *)
+PROCEDURE FindNextMatch  (VAR entry: Entry): BOOLEAN;
+
+(* Creates a new file in current directory, and caches the entry in memory.
+   Aborts and returns FALSE if filename was already present in directory. *)
+PROCEDURE CreateEntry    (filename: EntryNameAndType; VAR entry: Entry): BOOLEAN;
+
+PROCEDURE StartCluster   (VAR entry: Entry): Cluster;
+PROCEDURE SetStartCluster(VAR entry: Entry; cluster: Cluster);
+
+(* Updates a file entry on disk from its cached version.
+   Can be used to rename a file, but be sure to first verify the new name doesn't already exists *)
+PROCEDURE UpdateEntry    (VAR entry: Entry);
+
+(* Deletes a file. The entry must have be returned by FindNextMatch first *)
+PROCEDURE DeleteEntry    (VAR entry: Entry);
+
+(* Enters a subdirectory, returns FALSE if directory does not exist *)
+PROCEDURE EnterDir       (dirname: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE EnterRootDir   ();
+PROCEDURE CurrentDir     (): Directory;
+PROCEDURE SetCurrentDir  (dir: Directory);
+PROCEDURE SaveCurrentDir ();
+PROCEDURE BackToSavedDir ();
+END FATDIR.
+

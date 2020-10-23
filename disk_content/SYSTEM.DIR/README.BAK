@@ -1,0 +1,28 @@
+Caution! Only build a system if you know what you do !
+
+Two systems are ready to be built here.
+
+The first one integrates the editor and a part of the compiler in overlays, like the
+original Turbo Modula-2 did.
+
+It can be build with the following command:
+
+LINK SHELLRES <LINKSYS3.TXT
+Output file: SYSTEM.SYS
+Include all needed modules (Y/N) ? N
+
+
+Then finalize the binary image with FINALIZE:
+
+Linked file (without .SYS extension): SYSTEM
+Name of Kernel module: KERNEL3
+
+This produces a SYSTEM.BIN binary that can be tested with
+
+RUNSYS SYSTEM.BIN
+
+or permanently installed into the reserved sectors of the disk (Caution!) with INSTALL:
+System filename (without BIN extension): SYSTEM
+
+
+

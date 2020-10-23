@@ -1,0 +1,4 @@
+DEFINITION MODULE EditPos;
+VAR editPos: CARDINAL;
+(*    global17: BOOLEAN; *)
+END EditPos.

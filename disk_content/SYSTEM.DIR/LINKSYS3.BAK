@@ -1,0 +1,11 @@
+disk newfat32 fatdir excepts kernel2 editor terminal loader texts +
+filedesc files initmod editdisk comline editpos
+doubles editor
+symtab editor
+compiler editor
+edit2 loader
+errors loader
+codegen loader
+convert editdisk
+scanner editdisk
+
