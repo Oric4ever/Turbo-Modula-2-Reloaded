@@ -1,0 +1,30 @@
+DEFINITION MODULE SHELL;
+FROM Texts IMPORT TEXT;
+FROM Files IMPORT FILE;
+
+TYPE FileName = ARRAY [0..19] OF CHAR;
+
+VAR
+(*  2 *) global2 : TEXT;
+(*  3 *) currentDrive : CARDINAL;
+(*  4 *) userNum : CARDINAL;
+(*  5 *) exit    : BOOLEAN;
+(*  6 *) global6 : BOOLEAN;
+(*  7 *) global7 : BOOLEAN;
+(*  8 *) index   : CARDINAL;
+
+PROCEDURE proc1(prompt: ARRAY OF CHAR; default: ARRAY OF CHAR);
+PROCEDURE proc2(prompt: CHAR; commands: ARRAY OF CHAR): CARDINAL;
+PROCEDURE Confirm(message: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE proc4(VAR codepos: CARDINAL): BOOLEAN;
+PROCEDURE proc5(VAR filename: FileName; param3: ARRAY OF CHAR; param1: BOOLEAN);
+PROCEDURE DoCreate(VAR file: FILE; VAR filename: FileName);
+PROCEDURE DoOpen(VAR file: FILE; filename: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE FileNotFound(filename: ARRAY OF CHAR);
+PROCEDURE proc9(string: ARRAY OF CHAR);
+PROCEDURE proc10;
+PROCEDURE WriteCommandItem(string: ARRAY OF CHAR);
+PROCEDURE EndScreen;
+
+END SHELL.
+

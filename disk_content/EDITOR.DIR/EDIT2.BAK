@@ -1,0 +1,16 @@
+DEFINITION MODULE EDIT2;
+
+EXCEPTION QuitCommand;
+
+VAR global2 : BOOLEAN;
+VAR global3 : BOOLEAN;
+VAR global4 : ADDRESS;
+VAR global5 : ADDRESS;
+VAR global6 : CARDINAL;
+VAR global7 : CARDINAL;
+
+PROCEDURE proc1;
+PROCEDURE proc2(n: CARDINAL);
+
+END EDIT2.
+

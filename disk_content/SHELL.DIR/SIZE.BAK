@@ -1,0 +1,16 @@
+MODULE Size;
+IMPORT Files, Text, ComLine;
+VAR f: Files.FILE;
+    filename: ARRAY [0..15] OF CHAR;
+BEGIN
+(*
+  Texts.ReadString(ComLine.commandLine, filename);
+  IF filename[0] = 0C THEN
+*)
+  ComLine.PromptFor("Filename: ", filename);
+  IF Files.Open(f, filename) THEN
+    WRITELN(filename, ' is ', Files.FileSize(f), ' bytes.')
+  ELSE
+    WRITELN(filename, ' not found.')
+  END
+END Size.

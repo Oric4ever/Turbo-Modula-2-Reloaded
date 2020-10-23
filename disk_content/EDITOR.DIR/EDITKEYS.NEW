@@ -1,0 +1,47 @@
+[[D     ; Cursor left       : Ctrl S      ←           ESC [D
+[[C     ; Cursor right      : Ctrl D      →           ESC [C
+[[1;5D  ; Word left         : Ctrl A      Ctrl ←      ESC [1;5D
+[[1;5C  ; Word right        : Ctrl F      Ctrl →      ESC [1;5C
+[[A     ; Line up           : Ctrl E      ↑           ESC [A
+[[B     ; Line down         : Ctrl X      ↓           ESC [B
+[[1;5A  ; Scroll down       : Ctrl W      Ctrl ↑      ESC [1;5A
+[[1;5B  ; Scroll up         : Ctrl Z      Ctrl ↓      ESC [1;5B
+[[5~    ; Page up           : Ctrl R      ⇞ (PgUp)    ESC [5~
+[[6~    ; Page down         : Ctrl C      ⇟ (PgDn)    ESC [6~
+[[1~    ; To left of line   : Ctrl Q S    ↖ (Home)    ESC [1~
+[[H     ;    alternate      :                         ESC [H
+[[4~    ; To right of line  : Ctrl Q D    End         ESC [4~
+[[F     ;    alternate      :                         ESC [F
+[[5;5~  ; Top of window     : Ctrl Q E    Ctrl PgUp   ESC [5;5~
+[[6;5~  ; Bottom of window  : Ctrl Q X    Ctrl PgDn   ESC [6;5~
+[[1;5H  ; To top of file    : Ctrl Q R    Ctrl ↖      ESC [1;5H
+[[1;5F  ; To end of file    : Ctrl Q C    Ctrl End    ESC [1;5F
+[(      ; To start of block : Ctrl Q B
+[)      ; To end of block   : Ctrl Q K
+[-      ; To last cursor pos: Ctrl Q P
+[[2~    ; Insert mode on/off: Ctrl V      Ins         ESC [2~
+N       ; Insert line       : Ctrl N
+Y       ; Delete line       : Ctrl Y
+Z       ; Delete end of line: Ctrl Q Y
+[[3;5~  ; Delete right word : Ctrl T      Ctrl Del    ESC [3~
+[[3~    ; Delete right char.: Ctrl G      Del
+?       ; Delete left char. : Del         BackSp      0x7f
+KB      ; Mark block start  : Ctrl K B
+KK      ; Mark block end    : Ctrl K K
+KH      ; Hide block        : Ctrl K H
+C       ; Copy block        : Ctrl K C
+KV      ; Move block        : Ctrl K V
+KY      ; Delete block      : Ctrl K Y
+R       ; Read block (disk) : Ctrl K R
+W       ; Write block (disk): Ctrl K W
+[[21~   ; Save file, exit   : Ctrl K D    F10         ESC [21~
+S       ; Save, edit        : Ctrl K S
+[[20~   ; Quit, no save     : Ctrl K Q    F9          ESC [20~
+KJ      ; Delete file (disk): Ctrl K J
+I       ; Tab               : Ctrl I      Tab
+[[Z     ; Auto-indent on/off: Ctrl Q I    F8
+[OQ     ; Find              : Ctrl Q F    F2
+[OS     ; Find and replace  : Ctrl Q A    F4
+[OR     ; Repeat last find  : Ctrl L      F3          ESC [OR
+U       ; Unicode hex entry : Ctrl U   (replaces original Control Prefix Char (Ctrl P))
+

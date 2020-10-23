@@ -1,0 +1,693 @@
+IMPLEMENTATION MODULE CodeGen;
+IMPORT Scanner, Files, Compiler;
+FROM ComLine IMPORT codepos, execute;
+FROM SYSTEM IMPORT ADR, MOVE;
+
+TYPE Record = RECORD 
+                word0: CARDINAL;
+                CASE : CARDINAL OF
+                | 0: word1,word2: CARDINAL; 
+                | 1: ptr1: POINTER TO ARRAY [0..255] OF CHAR;
+                | 2: long1: LONGINT;
+                END;
+              END;
+     RecordPtr = POINTER TO Record;
+
+VAR 
+(*  2 *) global2 : CARDINAL;
+(*  3 *) global3 : CARDINAL;
+(*  4 *) global4 : CARDINAL;
+(*  5 *) global5 : BOOLEAN;
+(*  6 *) global6 : POINTER TO ARRAY [0..2047] OF BYTE;
+(*  7 *) global7 : [0..9];
+(*  8 *) global8 : [0..5];
+(*  9 *) global9 : CARDINAL;
+(* 10 *) global10: CARDINAL;
+(* 11 *) global11: ARRAY [0..255] OF Record;
+(* 12 *) global12: [0..16];
+(* 13 *) global13: WORD;
+(* 14 *) global14: BOOLEAN;
+(* 15 *) global15: BOOLEAN;
+
+EXCEPTION errorfound;
+
+(* $[+ remove procedure names *)
+
+PROCEDURE proc26(param1: BOOLEAN);
+EXCEPTION CE;
+BEGIN
+  IF NOT param1 THEN RAISE CE END;
+END proc26;
+
+PROCEDURE proc23;
+BEGIN 
+  Files.SetPos(Scanner.global4, LONG(global3));
+  Files.WriteBytes(Scanner.global4, ADDRESS(global6), 2048);
+  INC(global3, 2048);
+  INC(global4, 2048);
+  MOVE(ADDRESS(global6) + 2048, ADDRESS(global6), global2 - global3);
+END proc23;
+
+PROCEDURE proc28;
+VAR
+    local2 : CARDINAL;
+    local3 : CARDINAL;
+    local4 : CARDINAL;
+BEGIN
+  local2 := global2 DIV 512;
+  local3 := (local2 - ORD(local2 <> 0)) * 512;
+  IF local3 < global3 THEN
+    local4 := global3 - local3;
+    IF global2 > global3 THEN
+      MOVE(ADDRESS(global6), ADDRESS(global6)+local4, global2-global3);
+    END;
+    Files.SetPos(Scanner.global4, LONG(local3));
+    proc26(Files.ReadBytes(Scanner.global4, ADDRESS(global6), local4) = local4);
+    global3 := local3;
+    global4 := global3 + 4096;
+  END;
+END proc28;
+
+PROCEDURE proc19(param1: CARDINAL): CARDINAL;
+VAR byte: BYTE;
+BEGIN
+  IF param1 >= global3 THEN RETURN CARDINAL(global6^[param1-global3]) END;
+  Files.SetPos(Scanner.global4, LONG(param1));
+  Files.ReadByte(Scanner.global4, byte);
+  RETURN CARDINAL(byte)
+END proc19;
+
+PROCEDURE proc20(param2: BYTE; param1: CARDINAL);
+BEGIN
+  IF param1 >= global3 THEN
+    global6^[param1-global3] := param2;
+    RETURN
+  END;
+  Files.SetPos(Scanner.global4, LONG(param1));
+  Files.WriteByte(Scanner.global4, param2);
+END proc20;
+
+PROCEDURE proc29;
+BEGIN
+  IF global2 >= codepos THEN RAISE errorfound END;
+END proc29;
+
+PROCEDURE proc1(param1: BYTE); 
+BEGIN 
+  IF global2 >= global4 THEN proc23 END;
+  global6^[global2-global3] := param1;
+  INC(global2);
+  IF global15 THEN proc29 END;
+END proc1;
+
+PROCEDURE proc2(param2, param1: BYTE);
+BEGIN 
+  IF global2 + 1 >= global4 THEN proc23 END;
+  global6^[global2 - global3] := param2;
+  global6^[global2 + 1 - global3] := param1;
+  INC(global2, 2);
+  IF global15 THEN proc29 END;
+END proc2;
+
+PROCEDURE proc3(param1: WORD);
+VAR ptr: ADDRESS;
+BEGIN
+  IF global2 + 1 >= global4 THEN proc23 END;
+  ptr := ADDRESS(global6) + (global2 - global3);
+  ptr^ := param1;
+  INC(global2, 2);
+  IF global15 THEN proc29 END;
+END proc3;
+
+PROCEDURE proc21(param1: ADDRESS);
+VAR ptr : POINTER TO ARRAY [0..1] OF BYTE;
+BEGIN 
+  ptr := param1;
+  REPEAT
+    proc1(ptr^[0]);
+    ptr := ADDRESS(ptr) + 1;
+  UNTIL ORD(ptr^[0]) = 0;
+  IF global15 THEN proc29 END;
+END proc21;
+
+PROCEDURE proc30;
+VAR local2: CARDINAL;
+  PROCEDURE proc31(param1: CARDINAL): CARDINAL;
+  BEGIN
+    CASE param1 OF
+    | 8    : RETURN  60H
+    | 9    : RETURN 0ECH
+    | 1, 5 : RETURN  2CH
+    | 2, 6 : RETURN  08H
+    | 3, 7 : RETURN 0
+    END;
+  END proc31;
+BEGIN
+  global14 := FALSE;
+  local2 := 0;
+  IF global7 <> 9 THEN
+    global10 := global10 DIV 2;
+    local2 := global7 DIV 4 * (ORD((global7 MOD 4) <> 3) * 12 + 4);
+  END;
+  IF global8 = 4 THEN
+    IF global9 = 1 THEN proc1(16) ELSE proc2(17, global9) END;
+    IF global10 >= 128 THEN (* $T+ *)
+      proc2(175, (256 - global10) * 2);
+      global10 := 0; (* $T- *)
+    END;
+    global8 := 2;
+  END;
+  IF global7 IN {3,7} THEN proc1(18) END;
+  IF global8 = 5 THEN
+    IF global7 IN {3,7} 
+    THEN proc2(global7 DIV 4 + 8, 0)
+    ELSE proc1(global7 MOD 4 + local2 + 13)
+    END;
+  ELSE
+    IF global7 IN {0,4} THEN INC(global7) END;
+    IF global8 = 3 THEN
+      IF (global10 <= 15) AND (global9 <= 15) AND (global7 IN {1,5,9})
+      THEN 
+        IF global7 = 9 THEN local2 := 0E4H END;
+        proc2(local2 + 12, global9 * 16 + global10);
+        RETURN
+      END;
+      proc2(proc31(global7)+local2+3, global9);
+      proc1(global10);
+    ELSE
+      CASE global7 OF
+      | 9:
+          IF (global8 = 1) AND (global10 IN {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15})
+          THEN proc1(global10 + 0F0H); RETURN
+          END;
+      | 8:
+          IF (global8 = 2) AND (global10 = 0) THEN RETURN END;
+      | 1, 5:
+          IF (global8 <> 2) OR NOT Compiler.global2 THEN
+            IF global8 = 0 THEN
+              IF global10 <= 7 THEN
+                proc1(global10 + local2);
+                RETURN
+              ELSIF global10 >= 245 THEN
+                proc1(local2 + 288 - global10);
+                RETURN
+              END;
+            ELSE
+              IF (global10 >= (4 - global8 * 2)) AND (global10 <= 15) THEN
+                proc1((global8 + 1) * 32 + global10 + local2);
+                RETURN
+              END;
+            END;
+          END;
+      | 2, 6:
+          IF (global8 = 2) AND (global10 = 0) THEN
+            proc1(local2 + 041H);
+            RETURN
+          END;
+      END;
+      proc2(proc31(global7) + global8 + local2, global10);
+      IF Compiler.global2 AND (global7 = 8) AND (global8 <= 1) THEN
+        proc1(global9)
+      END;
+    END;
+  END;
+END proc30;
+
+PROCEDURE proc32;
+VAR
+    local2 : CARDINAL;
+    local3 : CARDINAL;
+    local4 : CARDINAL;
+    local5 : POINTER TO Record;
+BEGIN
+  IF global14 THEN proc30
+  ELSE
+    IF global12 <> 0 THEN
+      local2 := 0;
+      WHILE local2 < global12 DO
+        local5 := ADR(global11[local2]);
+        CASE local5^.word0 OF
+        | 0: (* 02EE *)
+            IF local5^.word2 <> 0 THEN proc2(2, local5^.word2)
+            ELSE proc2(140, Scanner.proc24(local5^.word1, 128));
+                 proc21(local5^.word1);
+            END;
+        | 1: (* 0308 *)
+            IF local5^.word1 <= 255 THEN
+              IF local5^.word1 <= 15
+              THEN proc1(local5^.word1 + 144)
+              ELSE proc2(141, local5^.word1)
+              END;
+            ELSE (* 0323 *)
+              proc1(142);
+              proc3(local5^.word1)
+            END; (* 0329 *)
+        | 2: (* 032A *)
+            proc1(143);
+            proc3(local5^.word1);
+            proc3(local5^.word2);
+        | 3: (* 0334 *)
+            local4 := 8;
+            REPEAT (* 0336 *)
+              DEC(local4, 4);
+              proc1(143);
+              local3 := 0;
+              REPEAT (* 033F *)
+                proc1(local5^.ptr1^[local4 + local3]);
+                INC(local3);
+              UNTIL local3 > 3;
+            UNTIL local4 = 0;
+            IF Compiler.global2 THEN proc2(0, 22) END;
+        | 4: (* 035B *)
+            IF CARDINAL(ABS(INTEGER(local5^.word1))) <= 255 THEN
+              IF local5^.word1 <> NIL THEN
+                IF ABS(INTEGER(local5^.word1)) = 1 THEN
+                  proc1(ORD(INTEGER(local5^.word1) < 0) + 172)
+                ELSE (* 0378 *)
+                  proc2(ORD(INTEGER(local5^.word1) < 0) + 174,
+                        ABS(INTEGER(local5^.word1)));
+                END;
+              END; (* 0382 *)
+            ELSE (* 0384 *)
+              proc1(142);
+              proc3(local5^.word1);
+              proc1(166);
+            END; (* 038d *)
+(* $T+ generates ELSE RAISE CaseSelectError *)
+        END; (* CASE *)
+        INC(local2);
+      END; (* 03A8 *)
+      global12 := 0;
+    END (* 03AA *)
+  END (* 03aa *);
+END proc32;
+
+PROCEDURE proc33(param1: WORD);
+BEGIN
+  (* commented contents ? *)
+END proc33;
+
+PROCEDURE proc34(param2, param1: WORD);
+VAR unused: WORD;
+BEGIN
+  (* commented contents ? *)
+END proc34;
+
+PROCEDURE proc4;
+VAR unused: WORD;
+BEGIN 
+  IF global5 THEN
+    global12 := global12 + ORD(global14) - 1;
+    global14 := FALSE;
+  END;
+END proc4;
+
+PROCEDURE proc5(param4, param3, param2, param1: CARDINAL);
+BEGIN 
+  IF global5 THEN
+    proc32;
+    global7  := param4;
+    global8  := param3;
+    global9  := param2;
+    global10 := param1;
+    global14 := TRUE;
+    IF param4 IN {4,5,6,7,9} THEN proc30 END;
+  END;
+END proc5;
+
+(* $T- *)
+
+PROCEDURE proc8(param1: CARDINAL);
+VAR ptr : POINTER TO Record;
+BEGIN 
+  IF global5 THEN
+    IF global14 THEN proc30 END;
+    IF global12 >= 16 THEN Scanner.proc26(90) END;
+    ptr := ADR(global11[global12]);
+    ptr^.word0 := 1;
+    ptr^.word1 := param1;
+    INC(global12);
+  END;
+END proc8;
+
+PROCEDURE proc9(param3: CARDINAL; param1: LONGINT);
+VAR ptr : POINTER TO Record;
+BEGIN 
+  IF global5 THEN
+    IF global14 THEN proc30 END;
+    IF global12 >= 16 THEN Scanner.proc26(90) END;
+    ptr := ADR(global11[global12]);
+    ptr^.word0 := param3;
+    ptr^.long1 := param1;
+    INC(global12);
+  END;
+END proc9;
+
+PROCEDURE proc6(param2, param1 : CARDINAL);
+VAR ptr: POINTER TO Record;
+    local3 : CARDINAL;
+    ptr2: POINTER TO Record;  
+
+  PROCEDURE proc35(param1: CARDINAL): BOOLEAN;
+  VAR
+    i: CARDINAL;
+    j: CARDINAL;
+  BEGIN
+    j := 1;
+    i := 0;
+    REPEAT
+      IF j = param1 THEN ptr := ADDRESS(i); RETURN TRUE END;
+      j := j * 2;
+      INC(i);
+    UNTIL i > 14;
+    RETURN FALSE  
+  END proc35;
+
+  PROCEDURE proc36(): CARDINAL;
+  BEGIN
+    (* commented contents ? *)
+  END proc36;
+
+BEGIN
+  IF global5 THEN
+    IF global12 <> 0 THEN
+      ptr2 := ADR(global11[global12 - 1]);
+      IF ptr2^.word0 = 1 THEN
+        IF (param2 IN {6,7}) AND (param1 <= 1) THEN
+          IF param2 = 7 THEN ptr2^.word1 := -INTEGER(ptr2^.word1) END;
+          IF global12 > 1 THEN
+            IF global11[global12 - 2].word0 IN {1,4} THEN
+              INC(global11[global12 - 2].word1, ptr2^.word1);
+              DEC(global12); 
+            END; (* 04A9 *)
+          END; (* 04A9 *)
+          ptr2^.word0 := 4;
+          RETURN;
+        ELSE (* 04AF *)
+          IF (param2 IN {8,9}) AND (param1 = 0) AND proc35(ptr2^.word1) THEN
+            DEC(global12);
+            proc32;
+            IF ptr <> NIL THEN proc2(param2 + 168, ptr) END; (* 04CE *)
+            RETURN
+          ELSE (* 04D1 *)
+            IF (param2 = 10) AND (param1 <= 1) AND proc35(ptr2^.word1) THEN
+              DEC(ptr2^.word1);
+              proc32;
+              proc1(232);
+              RETURN
+            ELSE (* 04EE *)
+              IF (NOT Compiler.global2) AND (ptr2^.word1 = 0) 
+              AND (param2 IN {0,1,3}) AND (param1 <= ORD(param2 <> 3)) THEN
+                DEC(global12);
+                proc32;
+                proc1(171 + ORD(param2 <> 0) * 32);
+                RETURN
+              END; (* 0512 *)
+            END; (* 0512 *)
+          END;
+        END;
+      END; (* 0512 *)
+    END; (* 0512 *)
+    proc32;
+    IF (param1 = 5) OR (param2 = 18) THEN
+      local3 := Scanner.proc27("DOUBLES", 9567H) * 16;
+    END; (* 0532 *)
+    CASE param1 OF
+    | 0: (* 0536 *)
+        IF param2 >= 15 THEN
+          IF Compiler.global2 THEN proc1(125) ELSE proc2(144,33) END;
+          param1 := 2;
+        END; (* 054b *)
+    | 1: (* 054c *)
+        IF param2 >= 15 THEN
+          proc1(189);
+          param1 := 2;
+        ELSE
+          IF param2 IN {0,1,6,7,10} THEN param1 := 0
+          ELSIF param2 = 11 THEN proc2(183,172); RETURN
+          END; (* 056E *)
+        END; (* 056E *)
+    | 2: (* 056f *)
+        IF param2 <= 5 THEN proc1(197); proc17(23); param1 := 0
+        ELSIF param2 = 11 THEN
+          proc2(64,3); RETURN
+        END; (* 0589 *)
+    | 3: (* 058a *)
+        IF param2 <= 5 THEN
+          proc1(213); proc17(23); param1 := 0
+        ELSIF param2 IN {11,12} THEN
+          IF Compiler.global2 THEN proc1(param2 + 112)
+          ELSE
+            proc1(33);
+            IF param2 = 11 THEN
+              proc2(159,234); proc1(233);
+            ELSE (* 05BD *)
+              proc1(142); proc3(7FFFH); proc1(232); 
+            END; (* 05c7 *)
+            proc1(33);
+          END; (* 05ca *)
+          RETURN
+        ELSIF param2 IN {13,14,15} THEN
+          proc1(191);
+          param1 := 2;
+        END; (* 05d9 *)
+    | 4: (* 05da *)
+        IF param2 <= 5 THEN
+          IF param2 = 5 THEN
+            proc1(33);
+            param2 := 4;
+          END; (* 05E9 *)
+          IF param2 = 4 THEN proc2(183, 232); proc1(144); param2 := 0 END; (* 05F8 *)
+          param1 := 0
+        ELSIF param2 = 7 THEN
+          proc1(183); param2 := 8
+        END; (* 0606 *)
+    | 5: (* 0607 *)
+        IF param2 <> 18 THEN
+          proc1(240);
+          IF param2 <= 5 THEN proc1(local3+5); param1 := 0
+          ELSIF param2 >= 13 THEN
+            param1 := ORD(param2 = 16) + 2;
+            proc1(local3 + param1 - 1);
+          ELSE proc1(local3 + param2)
+          END; (* 0634*)
+          IF Compiler.global2 THEN
+            proc2(ORD(param2 <= 9)+1, (ORD(param2 IN {6,7,8,9,10,11,12})+1)*4);
+            IF param2 <= 5 THEN proc17(23) END;
+          END; (* 064E *)
+          IF param1 = 5 THEN RETURN END;
+        END; (* 0654 *)
+(* $T+ generate CaseSelectError exception *)
+    END; (* 066c *)
+(* $T- *)
+    IF param2 <= 12 THEN
+      proc1(param2 + param1 * 16 + 160);
+    ELSIF param2 - 13 <> param1 THEN
+      IF param2 <= 14 THEN
+        IF param1 <= 1 THEN proc1(221) ELSE proc1(param2 + 173) END;
+      ELSIF param2 <= 16 THEN proc1(param1 + 188)
+      ELSE (* 06A3 *) 
+        proc2(240, local3 + param1 + 1);
+        IF Compiler.global2 THEN proc2(1,8) END;
+      END; (* 06B1 *)
+    END; (* 06B1 *)
+  END; (* 06b1 *)
+END proc6;
+
+PROCEDURE proc7(param2, param1: CARDINAL);
+BEGIN 
+  IF global5 THEN proc32; proc1(param1 * 16 + param2 + 186) END;
+END proc7;
+
+
+PROCEDURE proc10(param1: CARDINAL);
+VAR ptr: RecordPtr;
+BEGIN 
+  IF global5 THEN
+    IF (param1 = 0) AND (global12 <> 0) THEN
+      ptr := ADR(global11[global12-1]);
+      IF (ptr^.word0 = 1) AND (ptr^.word1 = 0) THEN
+        DEC(global12);
+        proc32;
+        proc1(220);
+        RETURN
+      END; (* 06EC *)
+    END; (* 06EC *)
+    proc32;
+    IF param1 >= 23 THEN
+      proc1(64);
+    END; (* 06F7 *)
+(* $T+ *)
+    proc1( Compiler.global5[param1][0] );
+(* $T- *)
+  END; (* 0701 *)
+END proc10;
+
+PROCEDURE proc11(param2, param1: CARDINAL);
+BEGIN 
+  IF global5 THEN
+    proc32;
+    IF param2 = 5 THEN
+      IF param1 >= 10 THEN
+        proc2(64, param1 - 5)
+      ELSIF param1 = 6 THEN
+        IF Compiler.global2 THEN proc1(102)
+        ELSE
+          proc2(32, 141); proc2(64, 232); proc2(177, 1);
+          proc2(183, 232);
+        END; (* 073D *)
+      ELSE (* 073F *)
+(* $T+ *)
+        proc1(Compiler.global5[param1+27][0]);
+(* $T- *)
+      END; (* 074B *)
+    ELSE (* 074D *)
+      IF param2 = 4 THEN
+        proc2(18, 10);
+        proc1(param1);
+      ELSIF (param2 = 0) AND (param1 - 128 <= 3) AND (NOT Compiler.global2) THEN
+        proc1(param1 + 8)
+      ELSE
+        proc2(param2 + 132, param1)
+      END; (* 0775 *)
+    END; (* 0775 *)
+  END; (* 0775 *)
+END proc11;
+
+PROCEDURE proc17(param1: CARDINAL);
+BEGIN 
+  IF global5 THEN
+    proc32;
+    IF Compiler.global2 AND (param1 <> 20) THEN proc2(0,param1) END;
+  END;
+END proc17;
+
+PROCEDURE proc18(param3, param2, param1: CARDINAL); 
+BEGIN 
+  IF global5 THEN
+    proc32;
+    IF Compiler.global2 THEN
+      IF param3 <> 19 THEN proc2(0, param3) END;
+      proc1(param2);
+      IF param3 >= 3 THEN proc1(param1) END;
+    END; (* 07aa *)
+  END;
+END proc18;
+
+PROCEDURE proc12(VAR param2: CARDINAL; param1: BOOLEAN);
+VAR local2: CARDINAL;
+BEGIN 
+  IF global5 THEN
+    param2 := global2;
+    IF param1 THEN
+      local2 := proc19(global2 - 1);
+      IF local2 - 224 <= 1 THEN
+        proc20(local2 + 2, global2 - 1);
+      END;
+      proc1(0)
+    ELSE proc3(0)
+    END;
+  END;
+END proc12;
+
+PROCEDURE proc13(param2: CARDINAL; param1: BOOLEAN); 
+BEGIN 
+  IF global5 THEN
+    IF param1 AND (global2 < param2 + 254) THEN
+      proc20(proc19(global2 - 1) + 4, global2 - 1);
+      proc1(global2 + 1 - param2);
+    ELSE
+      proc3(param2 - (global2 + 1))
+    END;
+  END;
+END proc13;
+
+
+PROCEDURE proc14(param2: CARDINAL; param1: BOOLEAN): BOOLEAN;
+VAR 
+    local2: BYTE;
+    local3: BYTE;
+    local4: CARDINAL;
+    local5: ADDRESS;
+BEGIN 
+  IF global5 THEN
+    proc32;
+    local4 := param2 + 1;
+    IF param1 THEN
+      IF global2 > local4 + 254 THEN
+        IF local4 < global3 THEN
+          Files.SetPos(Scanner.global4, LONG(local4));
+          Files.ReadByte(Scanner.global4, local2);
+          INC(local4);
+          WHILE local4 < global3 DO
+            local3 := local2;
+            Files.ReadByte(Scanner.global4, local2);
+            Files.SetPos(Scanner.global4, LONG(local4));
+            Files.WriteByte(Scanner.global4, local3);
+            INC(local4)
+          END; (* 0842 *)
+          MOVE(global6, ADDRESS(global6) + 1, global2 - global3);
+          global6^[0] := local2;
+        ELSE (* 0850 *)
+          local5 := ADDRESS(global6) + local4 - global3;
+          MOVE(local5, local5 + 1, global2 - local4);
+        END; (* 085e *)
+        INC(global2);
+        proc20( proc19(param2 - 1) - 2, param2 - 1);
+        proc20( (global2 - local4) MOD 256, param2);
+        proc20( (global2 - local4) DIV 256, local4);
+        RETURN FALSE
+      END; (* 087f *)
+      proc20(global2 - local4, param2);
+    ELSE (* 0887 *)
+      proc20( (global2 - local4) MOD 256, param2);
+      proc20( (global2 - local4) DIV 256, local4);
+    END; (* 0898 *)
+  END; (* 0898 *)
+  RETURN TRUE
+END proc14;
+
+
+PROCEDURE proc15(param1: CARDINAL);
+VAR local2: CARDINAL;
+BEGIN 
+  IF global5 THEN
+    IF proc19(param1 - 1) <= 225 THEN
+      local2 := proc19(param1) + proc19(param1 + 1) * 256;
+      IF INTEGER(local2) > 0 THEN INC(local2) ELSE DEC(local2) END;
+      proc20( local2 MOD 256, param1);
+      proc20( local2 DIV 256, param1 + 1);
+    ELSE (* 08D2 *)
+      proc20( proc19(param1) + 1, param1);
+    END; (* 08D9 *)
+  END; (* 08D9 *)
+END proc15;
+
+
+PROCEDURE proc16(param1: CARDINAL): CARDINAL;
+BEGIN 
+  proc17(param1);
+  RETURN global2
+END proc16;
+
+PROCEDURE proc22;
+BEGIN 
+  global5  := TRUE;
+  global14 := FALSE;
+  global12 := 0;
+  proc28;
+END proc22;
+
+
+PROCEDURE proc24;
+BEGIN 
+  global15 := (ComLine.execute = 4);
+  global6  := ADDRESS(Scanner.global21);
+  global3  := 0;
+  global4  := 4096;
+  global2  := 16;
+  proc22;
+END proc24;
+
+END CodeGen.
+                                                                                

@@ -1,0 +1,116 @@
+MODULE CopyTo;
+IMPORT Texts, Files, ComLine, FileName;
+FROM Terminal IMPORT WriteString, WriteChar, ReadChar, ReadLine, WriteLn;
+FROM FATDIR   IMPORT EnterDir, EntryNameAndType, Build83Name, SaveCurrentDir, BackToSavedDir, BaseName, Extension;
+FROM FileName IMPORT FileNameType, CheckFileName, BuildStdFileName;
+FROM SYSTEM   IMPORT ADDRESS;
+FROM STORAGE  IMPORT ALLOCATE, MARK, RELEASE, FREEMEM;
+
+TYPE Name = ARRAY [0..15] OF CHAR;
+
+  PROCEDURE CopyFileToDir(srcName: Name; dir: ARRAY OF CHAR);
+  VAR
+      buffer, heapMark: ADDRESS;
+      tmpName : ARRAY [0..15] OF CHAR;
+      srcFile, destFile: Files.FILE;
+      bufSize, readBytes: CARDINAL;
+      confirm: CHAR;
+  BEGIN
+    IF Files.Open(srcFile, srcName) THEN
+      SaveCurrentDir;
+      IF EnterDir(dir) THEN
+        IF Files.Open(destFile, srcName) THEN
+          Files.Close(destFile);
+          WriteString("File exists in destination dir, overwrite (Y/N) ? ");
+          ReadChar(confirm); WriteChar(confirm); WriteLn;
+          IF CAP(confirm) # 'Y' THEN BackToSavedDir; RETURN END;
+        END;
+        Files.Create(destFile, srcName);
+        MARK(heapMark);
+        bufSize := FREEMEM() - 2000;
+        ALLOCATE(buffer, bufSize);
+        REPEAT
+          readBytes := Files.ReadBytes(srcFile, buffer, bufSize);
+          Files.WriteBytes(destFile, buffer, readBytes);
+        UNTIL readBytes < bufSize;
+        RELEASE(heapMark);
+        Files.Close(destFile);
+        BackToSavedDir;
+      ELSE
+        WriteString(dir); WriteString(" not found."); WriteLn;
+      END;
+      Files.Close(srcFile);
+    ELSE
+      WriteString(srcName); WriteString(" not found."); WriteLn;
+    END;
+
+  EXCEPTION Files.DiskFull:
+    WriteString("WRITE ERROR: DISK FULL"); WriteLn;
+    Files.Delete(destFile);
+    RELEASE(heapMark);
+  END CopyFileToDir;
+
+  PROCEDURE IllegalFileName(name: Name);
+  BEGIN
+    WriteString(name); WriteString(" is illegal file name."); WriteLn;
+  END IllegalFileName;
+
+VAR
+    filename: Name;
+    dirName : Name;
+    fileCheck, fileCheck2: FileNameType;
+    success: BOOLEAN;
+    char : CHAR;
+BEGIN
+  Texts.ReadString(ComLine.commandLine, filename);
+  Texts.ReadString(ComLine.commandLine, dirName);
+  IF filename[0] = 0C THEN
+    WriteString("Copy file  : ");
+    ReadLine(filename);
+  END;
+  IF filename[0] <> 0C THEN
+    IF dirName[0] = 0C THEN
+      WriteString("Copy to dir: ");
+      ReadLine(dirName);
+    END;
+    fileCheck := CheckFileName(filename);
+(*
+    fileCheck2 := CheckFileName(filename2);
+    IF (fileCheck2 = WILDCARD) OR (fileCheck2 = INVALID) THEN
+      IllegalFileName(filename2)
+    ELS
+*)
+    IF (fileCheck = NONAME) OR (fileCheck = INVALID) THEN
+      IllegalFileName(filename)
+    ELSIF fileCheck = WILDCARD THEN
+      WriteString("TODO: implement wildcard copy");
+      WriteLn;
+(*
+      IF fileCheck2 = NORMAL THEN
+        WriteString("TODO: implement wildcard copy");
+        WriteLn;
+      ELSE
+        proc23(filename1);
+        global15 := FALSE;
+        IF global12 <> 0 THEN
+          local6 := 0;
+          REPEAT
+            INC(local6);
+            local9 := ADR(global11[local6]);
+            WriteString("Copying ");
+            WriteString(local9^.fullname);
+            WriteLn;
+            filename1 := local9^.fullname;
+            success := CopyFile(filename1, filename2);
+          UNTIL (NOT success) OR (local6 >= global12);
+        ELSE
+          WriteString(NoFilesPresent);
+          WriteLn;
+        END;
+      END;
+*)
+    ELSE
+      CopyFileToDir(filename, dirName);
+    END;
+  END;
+END CopyTo.

@@ -1,0 +1,87 @@
+DEFINITION MODULE EDITOR;
+FROM SYSTEM IMPORT ADDRESS,WORD;
+
+TYPE CharType = (CRLF, CONTROL, OTHER, ALPHANUM);
+     CharPtr  = POINTER TO ARRAY [0..9] OF CHAR;
+
+VAR
+(*  2 *) beforeCursor : CharPtr;
+(*  3 *) afterCursor : CharPtr;
+(*  4 *) editBuffer : ADDRESS;
+(*  5 *) endBuffer : ADDRESS;
+(*  6 *) selectionStart : ADDRESS;
+(*  7 *) selectionEnd : ADDRESS;
+(*  8 *) currentCol : CARDINAL;
+(*  9 *) currentRow : CARDINAL;
+(* 10 *) currentFileLine: CARDINAL;
+(* 11 *) lastRow: CARDINAL;
+(* 12 *) lastColumn: CARDINAL;
+(* 13 *) global13: CARDINAL;
+(* 14 *) nbSectors: CARDINAL;
+(* 15 *) global15: CARDINAL;
+(* 16 *) editPosition: CARDINAL;
+(* 17 *) global17: BOOLEAN;
+(* 18 *) fileModified: BOOLEAN;
+(* 19 *) global19: BOOLEAN;
+(* 20 *) autoIndent: BOOLEAN;
+(* 21 *) global21: BOOLEAN;
+(* 22 *) global22: BOOLEAN;
+(* 23 *) global23: BOOLEAN;
+(* 24 *) firstModifiedPos: CARDINAL;
+
+
+(*  1 *) PROCEDURE PrintStatusLine(str: ARRAY OF CHAR; column: CARDINAL);
+(*  2 *) PROCEDURE Proc2;
+(*  3 *) PROCEDURE Proc3;
+(*  4 *) PROCEDURE RefreshEndOfLine(ptr: CharPtr; column, row: CARDINAL);
+(*  5 *) PROCEDURE UpdateColumn;
+(*  6 *) PROCEDURE Proc6(param2, param1: ADDRESS): ADDRESS;
+(*  7 *) PROCEDURE FindForward(ptr: CharPtr; size: CARDINAL; char: CHAR): ADDRESS;
+(*  8 *) PROCEDURE FindBackward(ptr: CharPtr; size: CARDINAL; char: CHAR): ADDRESS;
+(*  9 *) PROCEDURE MoveBytesAfterCursorToBefore(count: CARDINAL);
+(* 10 *) PROCEDURE MoveBytesBeforeCursorToAfter(count: CARDINAL);
+(* 11 *) PROCEDURE proc11(param2, param1: CARDINAL);
+(* 12 *) PROCEDURE proc12(param2, param1: CARDINAL);
+(* 13 *) PROCEDURE UpdateFirstModifiedPos(param1: ADDRESS);
+(* 14 *) PROCEDURE Proc14;
+(* 15 *) PROCEDURE GetKey(): CHAR;
+(* 16 *) PROCEDURE proc16(char: CHAR): CHAR;
+(* 17 *) PROCEDURE proc17(): CARDINAL;
+(* 18 *) PROCEDURE deleteRightChar;
+(* 19 *) PROCEDURE cursorLeft;
+(* 20 *) PROCEDURE cursorRight;
+(* 21 *) PROCEDURE lineUp;
+(* 22 *) PROCEDURE lineDown;
+(* 23 *) PROCEDURE proc23;
+(* 24 *) PROCEDURE Edit;
+(*
+(* 25 *) PROCEDURE pollKeyboard;
+(* 26 *) PROCEDURE initKeyBuffer;
+(* 27 *) PROCEDURE WriteSpaces(n: CARDINAL);
+(* 28 *) PROCEDURE proc28(param3: ADDRESS; param2,param1 : CARDINAL): CARDINAL;
+(* 29 *) PROCEDURE findLineFeed(param1: ADDRESS): ADDRESS;
+(* 30 *) PROCEDURE findReturn(param1: ADDRESS): ADDRESS;
+(* 31 *) PROCEDURE proc31(param1: ADDRESS): CARDINAL;
+(* 32 *) PROCEDURE proc32;
+(* 34 *) PROCEDURE proc34;
+(* 35 *) PROCEDURE proc35(param1: CharPtr);
+(* 36 *) PROCEDURE charType(ptr: CharPtr): CharType;
+(* 37 *) PROCEDURE proc37(line: CARDINAL);
+(* 38 *) PROCEDURE proc38(line: CARDINAL);
+(* 39 *) PROCEDURE scrollDown;
+(* 40 *) PROCEDURE scrollUp;
+(* 41 *) PROCEDURE proc41(char: CHAR);
+(* 42 *) PROCEDURE proc42;
+(* 43 *) PROCEDURE deleteRightChar;
+(* 44 *) PROCEDURE wordLeft;
+(* 45 *) PROCEDURE wordRight;
+(* 46 *) PROCEDURE deleteRightWord;
+(* 47 *) PROCEDURE deleteLine;
+(* 48 *) PROCEDURE pageUp;
+(* 49 *) PROCEDURE pageDown;
+(* 50 *) PROCEDURE showControlChar(char: CHAR);
+(* 51 *) PROCEDURE editMenu;
+(* 52 *) PROCEDURE proc52;
+*)
+END EDITOR.
+

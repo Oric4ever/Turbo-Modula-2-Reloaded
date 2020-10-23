@@ -1,0 +1,36 @@
+DEFINITION MODULE CODEGEN;
+FROM SYSTEM IMPORT BYTE, WORD, ADDRESS;
+
+VAR
+(*  2 *) global2 : CARDINAL;
+(*  3 *) global3 : CARDINAL;
+(*  4 *) global4 : CARDINAL;
+(*  5 *) global5 : BOOLEAN;
+
+PROCEDURE Emit1(param1: BYTE);
+PROCEDURE Emit2(param2, param1: BYTE);
+PROCEDURE EmitWord(param1: WORD);
+PROCEDURE proc4;
+PROCEDURE proc5(param4, param3, param2, param1: CARDINAL);
+PROCEDURE proc6(param2, param1: CARDINAL);
+PROCEDURE proc7(param2, param1: CARDINAL);
+PROCEDURE proc8(param1: CARDINAL);
+PROCEDURE proc9(param3: CARDINAL; param1: LONGINT);
+PROCEDURE proc10(param1: CARDINAL);
+PROCEDURE proc11(param2, param1: CARDINAL);
+PROCEDURE proc12(VAR param2: CARDINAL; param1: BOOLEAN);
+PROCEDURE proc13(param2: CARDINAL; param1: BOOLEAN);
+PROCEDURE proc14(param2: CARDINAL; param1: BOOLEAN): BOOLEAN;
+PROCEDURE proc15(param1: CARDINAL);
+PROCEDURE proc16(param1: CARDINAL): CARDINAL;
+PROCEDURE proc17(param1: CARDINAL);
+PROCEDURE proc18(param3, param2, param1: CARDINAL);
+PROCEDURE proc19(param1: CARDINAL): CARDINAL;
+PROCEDURE proc20(param2: BYTE; param1: CARDINAL);
+PROCEDURE EmitString(param1: ADDRESS);
+PROCEDURE proc22;
+PROCEDURE proc23;
+PROCEDURE proc24;
+
+END CODEGEN.
+

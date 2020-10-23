@@ -1,0 +1,42 @@
+DEFINITION MODULE SYMTAB;
+FROM SYSTEM IMPORT ADDRESS, WORD;
+IMPORT Files;
+
+TYPE Ext = ARRAY [0..2] OF CHAR;
+TYPE Symbol = RECORD
+                name: ARRAY [0..7] OF CHAR;
+                word: CARDINAL;
+              END;
+     RecordPtr = POINTER TO Record;
+     Record = RECORD link: RecordPtr END;
+TYPE T1 = POINTER TO R1;
+     R1 = RECORD
+            link0 : T1;
+            link1 : POINTER TO ARRAY [0..128] OF CHAR;
+            link2 : T1;
+            word3 : BITSET;
+            word4 : CARDINAL;
+          END;
+
+VAR
+
+    global2: BITSET;
+    global3: CARDINAL;
+    global4: Files.FILE;
+    global5: CARDINAL;
+    global6: POINTER TO ARRAY [0..99] OF Symbol;
+    global7,
+    global8: POINTER TO ARRAY [0..16] OF T1;
+    global9: POINTER TO RECORD w0:WORD; link1: T1 END;
+
+PROCEDURE proc1;
+PROCEDURE proc2;
+PROCEDURE proc3;
+PROCEDURE proc4;
+PROCEDURE proc5;
+PROCEDURE proc6;
+PROCEDURE proc7;
+PROCEDURE proc8;
+
+END SYMTAB.
+
