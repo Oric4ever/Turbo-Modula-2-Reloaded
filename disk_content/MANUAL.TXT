@@ -1,5 +1,5 @@
-Chapter 9 - Turbo Modula-2 Extensions
-=====================================
+Turbo Modula-2 Extensions
+=========================
 
 Turbo Modula-2 offers several extensions to Wirth's definition that are not covered by standard
 Modula-2, such as general-purpose READ and WRITE statements, string comparison and assignment, 
