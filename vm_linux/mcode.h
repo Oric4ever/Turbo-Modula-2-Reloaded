@@ -10,7 +10,7 @@
 extern word BC, IP, LOCAL_PTR, STACK_PTR;
 extern byte bdos(word fct, word param);
 extern byte bios(word fct, word param);
-extern void init_bios(void);
+extern void init_bios(char *);
 extern void warm_boot(void);
 extern byte mem[];
 extern byte *MEM(int addr);
