@@ -28,7 +28,7 @@ TRY IT:
 - cd interp
 - mcode rushhour (mcode is a Modula-2 bytecode interpreter written in Modula-2, so you are running the rushhour solver's bytecode in an interpreter that is itself interpreted by the virtual machine)
 - cd ..
-- e hello.mod (time to write your own helloworld program: answer Y to create a new file, and type the following before saving and quitting with F10 :
+- e hello.mod (time to write your own helloworld program: answer Y to create a new file, and type the following before saving and exiting with F10 :
 MODULE Hello;
 BEGIN
   WRITELN("Hello world!")
