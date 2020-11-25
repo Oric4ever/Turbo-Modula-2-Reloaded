@@ -95,7 +95,7 @@ byte bios(word fct, word param)
     return 0;
 }
 
-void init_bios(void)
+void init_bios(char *diskname)
 {
-    disk_image = fopen("image.dsk","r+");
+    disk_image = fopen(diskname,"r+");
 }
