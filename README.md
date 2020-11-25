@@ -19,11 +19,19 @@ TRY IT:
 ./m2_disk m2.dsk
 
 4. Try some examples:
-dir
-cd examples
-dir
-cd rushhour
-rushhour <level.001  (NB: this is a RushHour puzzle solver written in Modula-2, it will surely be way too fast on your PC, so let's complicate things with the following)
-cd ..
-cd interp
-mcode rushhour (mcode is a Modula-2 bytecode interpreter written in Modula-2, so you are running the rushhour solver's bytecode in an interpreter that is itself interpreted by the virtual machine)
+- dir
+- cd examples
+- dir
+- cd rushhour
+- rushhour <level.001  (NB: this is a RushHour puzzle solver written in Modula-2, it will surely be way too fast on your PC, so let's complicate things with the following)
+- cd ..
+- cd interp
+- mcode rushhour (mcode is a Modula-2 bytecode interpreter written in Modula-2, so you are running the rushhour solver's bytecode in an interpreter that is itself interpreted by the virtual machine)
+- cd ..
+- e hello.mod (time to write your own helloworld program: answer Y to create a new file, and type the following before saving and quitting with F10 :
+MODULE Hello;
+BEGIN
+  WRITELN("Hello world!")
+END Hello.
+- c hello.mod
+- hello
