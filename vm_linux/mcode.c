@@ -1691,8 +1691,10 @@ int main(int argc, char *argv[])
 
     set_conio_terminal_mode();
     tracelog = fopen("trace.txt","w");
-    init_bios();
-
+#if EMULATED_DISK
+    init_bios(sysfilename);
+#endif
+    
     /* some memory initialization just to remove differences with the Z80 version */
     // *WMEM(0xe3f0) = 0x041a; *WMEM(0xe3e6) = 0xe3f6;
     // *WMEM(0x0001) = 0xf203;
