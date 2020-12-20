@@ -37,3 +37,9 @@ END Hello.
 - hello
 
 or have a look at a small demonstration video: https://youtu.be/2DDvGZ8hrq8
+
+STATUS:
+This is not the publicly released version yet, it lacks documentation and I intend to deliver a new shell with the spirit of Midnight Commander.
+It's not finished also because there are a few modules from the original Turbo Modula-2 that I haven't decompiled yet (it's a lengthy manual process), and I would like to give all modules in source form so that people can change or recompile them.
+However it's already fully functional, I am currently enjoying solving the Advent of Code puzzles with it.
+LONGREAL support has just been added in the VM for Linux (not in the AVR version though), so only IOTRANSFER is unimplemented now.
