@@ -1,6 +1,4 @@
-#Virtual machine for Linux
-
-This is the prototype virtual machine for Linux. 
+This is the (development version) virtual machine for Linux. 
 
 It is really ugly because it evolved at the same time as the Turbo Modula-2 reverse engineering,
 so it started from the aim to run the original Turbo Modula-2 for CP/M without requiring Z80 emulation,
@@ -14,8 +12,8 @@ Finally, the BIOS emulation has now both calls for the old CP/M BIOS calls, and 
 
 HOW TO RUN TURBO MODULA-2 RELOADED:
 
-Download the small SD card image (FAT32 format) that is provided at the root of this repository. Don't change its name, and put it in the same directory as this virtual machine.
-Run the m2_disk executable in a VT100/ANSI compatible terminal (or better, an Xterm color terminal), the Turbo Modula-2 Reloaded will run.
+Download the small SD card image (FAT32 format) that is provided at the root of this repository, and put it in the same directory as this virtual machine.
+Run the m2 executable in a VT100/ANSI compatible terminal (or better, an Xterm color terminal), the Turbo Modula-2 Reloaded will run.
 
 A few commands to know :
 - CD dir   changes to dir directory
