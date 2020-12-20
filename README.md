@@ -1,4 +1,4 @@
-# Turbo-Modula-2-Reloaded,  NEW: Demonstration screencast on YouTube: https://youtu.be/2DDvGZ8hrq8
+# Turbo-Modula-2-Reloaded
 
 This is a Modula-2 system (operating system + compiler + editor) for tiny microcomputers with 64 KB ram : it has a 16-bit address space.
 
@@ -8,7 +8,7 @@ The Modula-2 system gets rid of its CP/M roots thanks to the introduction of a F
 
 TRY IT:
 
-1. Download the virtual machine for Linux and compile it. Four versions will be generated, depending on whether the virtual machine uses a disk image or files in the host filesystem, and whether a trace of MCode instructions is output or not.
+1. Download the virtual machine for Linux and compile it (make). It should work without modification on Linux, Android (in Termux), Windows (with Cygwin).
 
 2. Download the m2.dsk in the same directory as the virtual machine interpreters, it is an image of a FAT32 filesystem with Turbo Modula-2 Reloaded pre-installed in it. You can check the contents of this image:
 
@@ -35,3 +35,5 @@ BEGIN
 END Hello.
 - c hello.mod
 - hello
+
+or have a look at a small demonstration video: https://youtu.be/2DDvGZ8hrq8
