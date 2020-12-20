@@ -66,6 +66,7 @@ byte bios(word fct, word param)
             if (fseek(disk_image, lba_addr*512L, SEEK_SET)) return 1;
             if (fwrite(mem+dma_addr, 512, 1, disk_image) != 1) return 1;
             return 0;
+#ifdef LEGACY
         case 8: /* select disc drive => select partition */
             break;
         case 9: /* select track number => high word of LBA sector */
@@ -89,6 +90,7 @@ byte bios(word fct, word param)
             if (fseek(disk_image, lba_addr*512L, SEEK_SET)) return 1;
             if (fwrite(mem+dma_addr, 512, 1, disk_image) != 1) return 1;
             return 0;
+#endif
         default:
             printf("Error, unknown bios function %d\n", fct);
     }

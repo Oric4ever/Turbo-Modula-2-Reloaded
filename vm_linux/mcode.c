@@ -8,6 +8,7 @@
 #include <malloc.h>
 #include <unistd.h>
 #include <termios.h>
+#include <math.h>
 #include "mcode.h"
 
 #define BDOS_MCD 0
@@ -100,7 +101,7 @@ byte  high(word w)    { return w >> 8; }
 byte   low(word w)    { return w & 0xff; }
 void  load(word w)    { push(w); }
 #define  dload(lval)  { dpush(*(dword *)(&(lval))); }
-#define  qload(lval)  { qpush(*(dword *)(&(lval))); }
+#define  qload(lval)  { qpush(*(double *)(&(lval))); }
 #define  store(lval)  { word w = pop(); (lval) =  w; }
 #define dstore(lval)  { dop = dpop(); *(dword *)(&lval) = dop; }
 #define qstore(lval)  { qop = qpop(); *(double *)(&lval) = qop; }
@@ -169,7 +170,7 @@ word ext_proc_addr(word module_base, int n)
     return WMEM(addr_location)[0] + addr_location + 1;
 }
 
-/*
+#ifdef LEGACY
 bool scanner_fetch(void)        // SCANNER.2
 {
 //    fprintf(tracelog,"Z80 procedure %.8s.%d\n","SCANNER",2);
@@ -447,7 +448,7 @@ void find_ident(word symbol_list, word identifier, bool case_insensitive)
     }
     push(symbol); // return the symbol found (or null)
 }
-*/
+#endif
 
 bool z80(byte op)
 { 
@@ -455,9 +456,9 @@ bool z80(byte op)
     word return_addr = pop();
 
 
-//    if (IP==0x58A4)
-        fprintf(tracelog,"Z80 procedure %.8s.%d at %04X\n",module_name,proc_num,IP);
-/*
+    fprintf(tracelog,"Z80 procedure %.8s.%d at %04X\n",module_name,proc_num,IP);
+
+#ifdef LEGACY
     if (strncmp(module_name,"TERMINAL",8)==0 && proc_num==2) { // BusyRead(VAR ch:CHAR)
         word var_addr = pop();
         char c = GLOBAL[5];
@@ -522,8 +523,7 @@ bool z80(byte op)
         fflush(stdout);
         push(column);
     }
-    else
-    if (strncmp(module_name,"EDITDISK",8)==0 && proc_num==24) {
+    else if (strncmp(module_name,"EDITDISK",8)==0 && proc_num==24) {
         find_control_sequence();
     }
     else if (strcmp(module_name,"SCANNER")==0 && proc_num==2) {
@@ -616,8 +616,66 @@ bool z80(byte op)
         word addr = pop();
         find_keyword(addr, code);
     }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==1) { // qtod(r)
+        double r = qpop();
+        dpush((int)qpop());
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==2) { // qtof(r)
+        double r = qpop();
+        fpush((float)r);
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==3) { // dtoq(l)
+        int l = dpop();
+        qpush((double)l);
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==4) { // ftoq(r)
+        float r = fpop();
+        qpush((double)r);
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==5) { // qcp(r1,r2)
+        double r2 = qpop();
+        double r1 = qpop();
+        push(r1>r2); push(r1<r2);
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==6) { // qadd(r1,r2)
+        double r2 = qpop();
+        double r1 = qpop();
+        qpush(r1+r2);
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==7) { // qsub(r1,r2)
+        double r2 = qpop();
+        double r1 = qpop();
+        qpush(r1-r2);
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==8) { // qmul(r1,r2)
+        double r2 = qpop();
+        double r1 = qpop();
+        qpush(r1*r2);
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==9) { // qdiv(r1,r2)
+        double r2 = qpop();
+        double r1 = qpop();
+        qpush(r1/r2);
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==11) { // qneg(r)
+        double r = qpop();
+        qpush(-r);
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==12) { // qabs(r)
+        double r = qpop();
+        qpush(fabs(r));
+    }
+    else if (strcmp(module_name,"DOUBLES")==0 && proc_num==18) { // qmul10(uint64)
+        union {
+            double r;
+            uint64_t u;
+        } val;
+        val.r = qpop();
+        val.u = val.u * 10;
+        qpush(val.r);
+    }
     else
-*/
+#endif
     {
         fprintf(tracelog,"Z80 procedure %.8s.%d at %04X\n",module_name,proc_num,IP);
         fprintf(tracelog,"Not implemented!!\n");
@@ -678,7 +736,7 @@ void dfct_leave(int n)
 
 void qfct_leave(int n)
 {
-    int tmp = qpop(); // get result
+    double tmp = qpop(); // get result
     restore_frame(2*n & 0xff);
     qpush(tmp);
     leave_check(n);
@@ -687,8 +745,6 @@ void qfct_leave(int n)
 void longreal_opcode(void) {
     word op;
     double qtmp, qop;
-    printf("Longreal opcode !!!\n");
-    exit(1);
 
     switch (FETCH) {
     case  0: qload(LOCAL[IFETCH]); break;
@@ -699,9 +755,24 @@ void longreal_opcode(void) {
     case  5: qstore(GLOBAL[FETCH]); break;
     case  6: qstore(STACK_ADDRESSED[FETCH]); break;
     case  7: qstore(EXTERN(FETCH)[FETCH]); break;
-    case  8: op=pop(); qload(QARRAY_INDEXED(op)); break;
-    case  9: qtmp=qpop(); op=pop(); QARRAY_INDEXED(op)=qtmp; break;
+    case  8: FETCH; // immediate byte not used
+             op=pop(); qload(QARRAY_INDEXED(op)); break;
+    case  9: FETCH; // immediate byte not used
+             qtmp=qpop(); op=pop(); QARRAY_INDEXED(op)=qtmp; break;
     case 10: qfct_leave(FETCH); break;
+    /* new opcodes added */
+    case 11: dpush((int)qpop());              break; // qtod
+    case 12: fpush((float)qpop());            break; // qtof
+    case 13: qpush((double)dpop());           break; // dtoq
+    case 14: qpush((double)fpop());           break; // ftoq
+    case 15: qtmp=qpop(); qop=qpop();                // qcp
+             push(qop>qtmp); push(qop<qtmp);  break;
+    case 16: qtmp=qpop(); qpush(qpop()+qtmp); break; // qadd
+    case 17: qtmp=qpop(); qpush(qpop()-qtmp); break; // qsub
+    case 18: qtmp=qpop(); qpush(qpop()*qtmp); break; // qmul
+    case 19: qtmp=qpop(); qpush(qpop()/qtmp); break; // qdiv
+    case 20: qpush(-qpop());                  break; // qneg
+    case 21: qpush(fabs(qpop()));             break; // qabs
     }
 }
 
@@ -1186,7 +1257,7 @@ void coroutine_transfer(word to_corout) {
     do_continuation( pop() );
 }
 
-void raise() {
+void raise_to_kernel() {
     save_context(0x0306, RETURN_FROM_EXCEPTION); 
     coroutine_transfer(0x0304); 
 }
@@ -1198,7 +1269,7 @@ void error(int n, word hl, word bc)
     push(0);
     push(0);
     HL = hl; BC = bc;
-    raise();
+    raise_to_kernel();
 }
 
 void newprocess(void)
@@ -1237,7 +1308,7 @@ void newprocess(void)
 }
 
 
-/* Mimic of Z80 context to remove all differences
+/* Mimic Z80 context to remove all differences
 void newprocess(void)
 {
     word context[18] = {
@@ -1330,7 +1401,7 @@ bool mcode_interp(void)
 
   switch (FETCH) {
   case 0x00: error(16,0,0); break;
-  case 0x01: raise(); break;
+  case 0x01: raise_to_kernel(); break;
   case 0x02: push( proc_addr(FETCH) ); break;
   case 0x03: load( LOCAL[3]); break;
   case 0x04: load( LOCAL[4]); break;
@@ -1518,14 +1589,14 @@ bool mcode_interp(void)
 
   case 0xb0:             push( pop() << FETCH ); break;
   case 0xb1:             push( pop() >> FETCH ); break;
-  case 0xb2: iop=ipop(); push( ipop() <  iop ); break;
-  case 0xb3: iop=ipop(); push( ipop() >  iop ); break;
-  case 0xb4: iop=ipop(); push( ipop() <= iop ); break;
-  case 0xb5: iop=ipop(); push( ipop() >= iop ); break;
-  case 0xb6:             push( !pop()       ); break;
-  case 0xb7:             push(  pop() ^ -1  ); break;
-  case 0xb8: iop=ipop(); push( ipop() *  iop ); break;
-  case 0xb9: iop=ipop(); push( ipop() /  iop ); break;
+  case 0xb2: iop=ipop(); push( ipop() <  iop  ); break;
+  case 0xb3: iop=ipop(); push( ipop() >  iop  ); break;
+  case 0xb4: iop=ipop(); push( ipop() <= iop  ); break;
+  case 0xb5: iop=ipop(); push( ipop() >= iop  ); break;
+  case 0xb6:             push( !pop()         ); break;
+  case 0xb7:             push(  pop() ^ -1    ); break;
+  case 0xb8: iop=ipop(); push( ipop() *  iop  ); break;
+  case 0xb9: iop=ipop(); push( ipop() /  iop  ); break;
   case 0xba: swap(); if (pop()) overflow(); break;
   case 0xbb: long_to_int(); break;
   case 0xbc:             push( abs(ipop())  ); break;   
@@ -1694,7 +1765,7 @@ int main(int argc, char *argv[])
 #if EMULATED_DISK
     init_bios(sysfilename);
 #endif
-    
+
     /* some memory initialization just to remove differences with the Z80 version */
     // *WMEM(0xe3f0) = 0x041a; *WMEM(0xe3e6) = 0xe3f6;
     // *WMEM(0x0001) = 0xf203;

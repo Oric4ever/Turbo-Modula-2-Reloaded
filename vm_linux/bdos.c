@@ -1,3 +1,5 @@
+#ifdef LEGACY
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -167,3 +169,4 @@ byte bdos(word fct, word param) {
     return 0;
 }
 
+#endif
