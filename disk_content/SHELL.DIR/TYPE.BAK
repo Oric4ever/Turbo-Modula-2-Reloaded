@@ -20,7 +20,6 @@ BEGIN
   IF filename[0] <> 0C THEN
     IF Files.Open(file, filename) THEN
       Files.NoTrailer(file);
-      Terminal.WriteLn;
       IF NOT Files.EOF(file) THEN
         ComLine.RedirectOutput;
         console := ComLine.outName = "CON:";
@@ -49,7 +48,6 @@ BEGIN
         UNTIL char = EOT;
         Texts.CloseText(Texts.output);
         Files.Close(file);
-        Terminal.WriteLn;
       END;
     ELSE
       Terminal.WriteString(filename);

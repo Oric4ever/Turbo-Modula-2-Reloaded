@@ -1,0 +1,10 @@
+DEFINITION MODULE FileName;
+TYPE FileNameType = (NORMAL, WILDCARD, NONAME, INVALID);
+
+PROCEDURE CheckFileName(filename: ARRAY OF CHAR): FileNameType;
+PROCEDURE BuildStdFileName(VAR filename: ARRAY OF CHAR; 
+                             defaultExt: ARRAY OF CHAR; 
+                        forceDefaultExt: BOOLEAN);
+
+END FileName.
+

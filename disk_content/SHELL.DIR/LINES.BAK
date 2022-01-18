@@ -1,0 +1,15 @@
+MODULE Lines;
+IMPORT Texts, Out, ComLine;
+VAR t: Texts.TEXT;
+    filename: ARRAY 16 OF CHAR;
+    lines: INTEGER;
+BEGIN
+  ComLine.PromptFor("Filename: ", filename);
+  IF Texts.OpenText(t, filename) THEN
+    REPEAT INC(lines); Texts.ReadLn(t) UNTIL Texts.EOT(t);
+    Out.Int(lines, 5); Out.String(" lines.")
+  ELSE
+    Out.String(filename); Out.String(" not found.")
+  END;
+  Out.Ln
+END Lines.

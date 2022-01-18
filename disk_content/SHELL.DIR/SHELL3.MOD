@@ -1,13 +1,15 @@
-IMPLEMENTATION MODULE SHELL;
+MODULE SHELL;
 IMPORT FATDIR, Texts, Files, Terminal, ComLine, Loader, ShellRes;
+FROM Files IMPORT FILE;
 FROM SYSTEM IMPORT MOVE, ADR, ADDRESS, WORD, BYTE, BDOS, IORESULT, HLRESULT;
 FROM STORAGE IMPORT FREEMEM, ALLOCATE, MARK, RELEASE;
 
 CONST CTRLC = 03C; BackSpace = 10C; TAB = 11C; LF = 12C; CR = 15C;
-      XOFF = 23C; CTRLX = 30C; EOT = 32C; ESC = 033C; DEL = 177C; 
+      XOFF = 23C; CTRLX = 30C; EOT = 32C; ESC = 033C; DEL = 177C;
 
 CONST USERNUM = 32; DMAOFFSET = 26; SEARCHFIRST = 17; SEARCHNEXT = 18;
 
+TYPE FileName = ARRAY [0..19] OF CHAR;
 TYPE FullName = ARRAY [0..16] OF CHAR;
      Name =  RECORD
                CASE : BOOLEAN OF
@@ -17,7 +19,7 @@ TYPE FullName = ARRAY [0..16] OF CHAR;
                         word8 : CARDINAL;
                         flag : BOOLEAN;
                END;
-            END; 
+            END;
      NamePtr = POINTER TO Name;
 
 VAR buffer      [0080H] : ARRAY [0..127] OF CHAR;
@@ -26,15 +28,13 @@ VAR buffer      [0080H] : ARRAY [0..127] OF CHAR;
     bootFlag    [0322H] : BOOLEAN;
     libraries   [0352H] : ARRAY [0..7],[0..7] OF CHAR;
 
-(*
 (*  2 *) global2 : Texts.TEXT;
 (*  3 *) global3 : CARDINAL;
 (*  4 *) global4 : CARDINAL;
-(*  5 *) exit : CARDINAL;
+(*  5 *) exit    : BOOLEAN;
 (*  6 *) global6 : BOOLEAN;
 (*  7 *) global7 : BOOLEAN;
 (*  8 *) index   : CARDINAL;
-*)
 (*  9 *) global9 : CARDINAL;
 (* 10 *) global10: CARDINAL;
 (* 11 *) global11: ARRAY [1..256] OF Name; (* 5120 bytes *)
@@ -68,6 +68,7 @@ BEGIN
       END;
     ELSIF (char = BackSpace) OR (char = DEL) THEN
       IF i <> 0 THEN
+        buffer[i] := 0C;
         Terminal.WriteChar(BackSpace);
         Terminal.WriteChar(' ');
         Terminal.WriteChar(BackSpace);
@@ -75,6 +76,7 @@ BEGIN
       END;
     ELSIF (char = CTRLX) OR (char = ESC) THEN
       WHILE i <> 0 DO
+        buffer[i] := 0C;
         Terminal.WriteChar(BackSpace);
         Terminal.WriteChar(' ');
         Terminal.WriteChar(BackSpace);
@@ -101,7 +103,7 @@ END CmdLineDriver;
 PROCEDURE HandleRedirection; (* handle redirection *)
 VAR ch: CHAR;
 BEGIN
-  index := 0
+  index := 0;
   Texts.CloseText(global2);
   Texts.ConnectDriver(global2, CmdLineDriver);
   ComLine.inName  := "CON:";
@@ -136,14 +138,14 @@ END proc1;
 
 PROCEDURE proc16;
 VAR local2: ARRAY [0..19] OF CHAR;
+    i: CARDINAL;
 BEGIN
   index := 0;
   Texts.ReadString(global2, local2);
   MOVE(ADR(commandLine[index]), ADR(commandLine[0]), 127-index);
-  buffer[0] := 0C;
-  WHILE (ORD(buffer[0]) < 126) AND (commandLine[ORD(buffer[0])] <> 0C) DO
-    buffer[0] := CHR(ORD(buffer[0]) + 1);
-  END;
+  i := 0;
+  WHILE (i < 126) AND (commandLine[i] <> 0C) DO INC(i) END;
+  buffer[0] := CHR(i);
 END proc16;
 
 PROCEDURE proc2(prompt: CHAR; commands : ARRAY OF CHAR): CARDINAL;
@@ -177,15 +179,15 @@ BEGIN
 END WriteCommandItem;
 
 (* proc 12 *)
-PROCEDURE EndScreen;
-BEGIN
-  Terminal.ClearScreen
+PROCEDURE EndScreen; 
+BEGIN 
+  Terminal.ClearScreen 
 END EndScreen;
 
 (* proc 18 *)
 PROCEDURE proc18(param3: ARRAY OF CHAR; VAR param1: FileName): BOOLEAN;
 VAR i: CARDINAL;
-BEGIN
+BEGIN 
   IF NOT Texts.EOT(global2) THEN
     Texts.ReadString(global2, param1);
     IF param1[0] <> 0C THEN RETURN TRUE END;
@@ -193,7 +195,7 @@ BEGIN
   Terminal.WriteString(param3);
   Texts.ReadString(Texts.input, param1);
   Texts.ReadLn(Texts.input);
-  i := 0 REPEAT param1[i] := CAP(param1[i]); INC(i) UNTIL i > HIGH(param1);
+  i := 0; REPEAT param1[i] := CAP(param1[i]); INC(i) UNTIL i > HIGH(param1);
   RETURN param1[0] <> 0C
 END proc18;
 
@@ -311,7 +313,7 @@ VAR i, j, k: CARDINAL;
     name   : FileName;
     char   : CHAR;
 BEGIN
-  i := 0; j := 0; k := 0
+  i := 0; j := 0; k := 0;
   (* copy basename *)
   REPEAT
     char    := filename[i];
@@ -354,6 +356,8 @@ PROCEDURE DoOpen(VAR file: FILE; filename: ARRAY OF CHAR): BOOLEAN;
 BEGIN 
   RETURN Files.Open(file, filename);
 END DoOpen;
+
+(* Dir command externalized...
 
 PROCEDURE proc22(filename: FileName; VAR fcb: FCB; VAR user: CARDINAL);
 VAR i, j: CARDINAL;
@@ -539,6 +543,8 @@ BEGIN
   END;
 END DirCommand;
 
+*)
+
 PROCEDURE proc29(number: CARDINAL ): BOOLEAN;
 BEGIN
   IF (number - 1 < global12) AND global14[number]^.flag THEN
@@ -549,6 +555,8 @@ BEGIN
   Terminal.WriteLn;
   RETURN FALSE
 END proc29;
+
+(* copy command externalized
 
 PROCEDURE proc30;
   (* $[- *)
@@ -563,7 +571,7 @@ PROCEDURE proc30;
       local8: ADDRESS;
       local9: WORD;
   BEGIN
-    IF proc21(param1) = 2 THEN 
+    IF proc21(param1) = 2 THEN
       BuildStdFileName(param1, "", FALSE);
       BuildStdFileName(param2, "", FALSE);
       local3 := param1;
@@ -856,15 +864,17 @@ BEGIN
   END;         
 END proc38;
 
+*)
+
 PROCEDURE FileSelect; (* Workfile command *)
 BEGIN
   proc1("Workfile name:", "");
   Texts.ReadString(global2, global17);
   global17[HIGH(global17)] := 0C;
-  IF proc21(global17) IN {1,3} THEN 
-    proc19(global17); 
-    global17[0] := 0C 
-  END; 
+  IF proc21(global17) IN {1,3} THEN
+    proc19(global17);
+    global17[0] := 0C
+  END;
   IF global17[0] <> 0C THEN BuildStdFileName(global17, "MOD", FALSE) END;
   ShellRes.tabNames[ShellRes.currentTab] := global17;
   ShellRes.tabDirs [ShellRes.currentTab] := FATDIR.CurrentDir();
@@ -887,7 +897,7 @@ END proc41;
 PROCEDURE proc42(prompt: ARRAY OF CHAR; execute: CARDINAL);
 VAR filename: FileName;
 BEGIN
-  ShellRes.saveDir := FATDIR.CurrentDir();
+  FATDIR.SaveCurrentDir();
   IF ShellRes.tabNames[ShellRes.currentTab][0] = 0C THEN
     FileSelect;
     filename := global17;
@@ -1122,8 +1132,7 @@ END proc46;
 VAR i: CARDINAL;
 (* $[- *)
 BEGIN
-  showMenu := bootFlag;
-  bootFlag := FALSE;
+  showMenu := FALSE;
   REPEAT
     IF showMenu THEN
       Terminal.ClearScreen;

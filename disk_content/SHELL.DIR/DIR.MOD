@@ -82,7 +82,6 @@ BEGIN
   ReadDir(dirMask);
   IF nbFiles <> 0 THEN
     SortDir;
-    ComLine.RedirectOutput;
     fileIndex := 1;
     REPEAT
       baseName := sorted[fileIndex]^.baseName;

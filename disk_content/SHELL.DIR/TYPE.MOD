@@ -19,7 +19,6 @@ BEGIN
   END;
   IF filename[0] <> 0C THEN
     IF Files.Open(file, filename) THEN
-      Files.NoTrailer(file);
       IF NOT Files.EOF(file) THEN
         ComLine.RedirectOutput;
         console := ComLine.outName = "CON:";
@@ -56,6 +55,7 @@ BEGIN
     END;
   END;
 
-
+EXCEPTION
+| Files.EndError : 
 END Type.
 

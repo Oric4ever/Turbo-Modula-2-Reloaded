@@ -1,5 +1,5 @@
 IMPLEMENTATION MODULE SHELL;
-IMPORT FATDIR, Texts, Files, Terminal, ComLine, Loader, ShellRes;
+IMPORT FAT32, Texts, Files, Terminal, ComLine, Loader, ShellRes;
 FROM SYSTEM IMPORT MOVE, ADR, ADDRESS, WORD, BYTE, BDOS, IORESULT, HLRESULT;
 FROM STORAGE IMPORT FREEMEM, ALLOCATE, MARK, RELEASE;
 
@@ -867,7 +867,7 @@ BEGIN
   END; 
   IF global17[0] <> 0C THEN BuildStdFileName(global17, "MOD", FALSE) END;
   ShellRes.tabNames[ShellRes.currentTab] := global17;
-  ShellRes.tabDirs [ShellRes.currentTab] := FATDIR.CurrentDir();
+  ShellRes.tabDirs[ShellRes.currentTab]  := FAT32.firstDirCluster;
 END FileSelect;
 
 PROCEDURE proc41(prompt: ARRAY OF CHAR; VAR answer: FileName):BOOLEAN;
@@ -887,13 +887,13 @@ END proc41;
 PROCEDURE proc42(prompt: ARRAY OF CHAR; execute: CARDINAL);
 VAR filename: FileName;
 BEGIN
-  ShellRes.saveDir := FATDIR.CurrentDir();
+  ShellRes.saveDir := FAT32.firstDirCluster;
   IF ShellRes.tabNames[ShellRes.currentTab][0] = 0C THEN
     FileSelect;
     filename := global17;
   ELSE
     filename := ShellRes.tabNames[ShellRes.currentTab];
-    FATDIR.SetCurrentDir( ShellRes.tabDirs[ShellRes.currentTab] );
+    FAT32.firstDirCluster := ShellRes.tabDirs[ShellRes.currentTab];
   END;
   IF filename[0] <> 0C THEN
     BuildStdFileName(filename, "MOD", FALSE);
@@ -1165,4 +1165,4 @@ BEGIN
   UNTIL exit;
   Texts.CloseText(global2);
   Terminal.ExitScreen;
-END SHELL.
+END SHELL.                                                                                                               
